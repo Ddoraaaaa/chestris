@@ -35,6 +35,7 @@ function joinGame() {
   init();
 }
 
+
 let canvas, ctx;
 let playerNumber;
 let gameActive = false;
