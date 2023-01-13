@@ -1,3 +1,5 @@
+import deepFreeze from "deep-freeze";
+
 // +++++++++++++++++++++ SERVER INFORMATION ++++++++++++++++++++++++++++++++++
 const FRAME_RATE = 10;
 const GRID_SIZE = 20;
@@ -96,20 +98,40 @@ const ROTATION_OFFSET = [
         [[1, 0],  [1, 0],  [1, 0],  [-1, 0], [2, 0]]
     ]
 ]
-private static final int WALLKICK_NORMAL_180[][][] =
+
+// +++++++++++++++++++++ GAME RULE +++++++++++++++++++++++++++++++++++++++++++
+const TSPIN_DMG = [0, 2, 4, 8];
+const TSPIN_CHECK = [[0, 0], [0, 2], [2, 0], [2, 2]];
+const B2B_DMG = [1, 5, 10, 14, 17, 19, 20, 21];
+const LINE_DMG = [0, 0, 1, 2, 4];
+const COMBO_DMG = [0, 1, 1, 2, 2, 2, 3, 3, 4, 4, 5, 6, 7];
+const PC_DMG = 10;
+
+// +++++++++++++++++++++ JUST EXPORTIN' ++++++++++++++++++++++++++++++++++++++
+let A = [
+    FRAME_RATE,
+    GRID_SIZE,
+    CODE_LENGTH,
+    PIECE_COLOR,
+    BOARD_HEIGHT,
+    BOARD_WIDTH,
+    BOARD_VISIBLE_HEIGHT,
+    PREVIEW_QUEUE,
+    PIECE_POSITION,
+    PIECE_SPAWN,
+    ROTATION_OFFSET,
+    TSPIN_DMG,
+    TSPIN_CHECK,
+    B2B_DMG,
+    LINE_DMG,
+    COMBO_DMG,
+    PC_DMG
+]
+
+for(let anObject of A)
 {
-    {{ 1, 0},{ 2, 0},{ 1, 1},{ 2, 1},{-1, 0},{-2, 0},{-1, 1},{-2, 1},{ 0,-1},{ 3, 0},{-3, 0}},	// 0>>2─┐
-    {{ 0, 1},{ 0, 2},{-1, 1},{-1, 2},{ 0,-1},{ 0,-2},{-1,-1},{-1,-2},{ 1, 0},{ 0, 3},{ 0,-3}},	// 1>>3─┼┐
-    {{-1, 0},{-2, 0},{-1,-1},{-2,-1},{ 1, 0},{ 2, 0},{ 1,-1},{ 2,-1},{ 0, 1},{-3, 0},{ 3, 0}},	// 2>>0─┘│
-    {{ 0, 1},{ 0, 2},{ 1, 1},{ 1, 2},{ 0,-1},{ 0,-2},{ 1,-1},{ 1,-2},{-1, 0},{ 0, 3},{ 0,-3}},	// 3>>1──┘
-};
-private static final int WALLKICK_I_180[][][] =
-{
-    {{-1, 0},{-2, 0},{ 1, 0},{ 2, 0},{ 0, 1}},													// 0>>2─┐
-    {{ 0, 1},{ 0, 2},{ 0,-1},{ 0,-2},{-1, 0}},													// 1>>3─┼┐
-    {{ 1, 0},{ 2, 0},{-1, 0},{-2, 0},{ 0,-1}},													// 2>>0─┘│
-    {{ 0, 1},{ 0, 2},{ 0,-1},{ 0,-2},{ 1, 0}},													// 3>>1──┘
-};
+    deepFreeze(anObject);
+}
 
 export {
     FRAME_RATE,
@@ -122,5 +144,11 @@ export {
     PREVIEW_QUEUE,
     PIECE_POSITION,
     PIECE_SPAWN,
-    ROTATION_OFFSET
+    ROTATION_OFFSET,
+    TSPIN_DMG,
+    TSPIN_CHECK,
+    B2B_DMG,
+    LINE_DMG,
+    COMBO_DMG,
+    PC_DMG
 }
