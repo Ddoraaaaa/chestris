@@ -1,5 +1,5 @@
 import { Server } from "socket.io";
-import { initGame, gameLoop, getUpdatedVelocity } from "./src/game.js";
+import { initGame, gameLoop } from "./src/game.js";
 import { FRAME_RATE, CODE_LENGTH } from "./src/constants.js";
 import { makeId } from "./src/utils.js";
 
@@ -70,22 +70,7 @@ io.on('connection', client => {
   }
 
   function handleKeydown(keyCode) {
-    const roomName = clientRooms[client.id];
-    if (!roomName) {
-      return;
-    }
-    try {
-      keyCode = parseInt(keyCode);
-    } catch(e) {
-      console.error(e);
-      return;
-    }
-
-    const vel = getUpdatedVelocity(keyCode);
-
-    if (vel) {
-      state[roomName].players[client.number - 1].vel = vel;
-    }
+    return;
   }
 
   function handleKeyup(keyCode) {

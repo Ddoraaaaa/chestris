@@ -12,12 +12,13 @@ export default class gameBoard {
         this.garbageQueue = [];
         this.nextQueue = [];
         this.heldPiece = 0;
+        this.activePiece = 0;
 
         //game rules
         this._bagSize = bagSize;
 
         this.fillNextQueue();
-        this.activePiece = this.getNextPiece();
+        this.spawnPiece();
     }
 
     //get type of mino at row i, col j
