@@ -1,18 +1,12 @@
-const { GRID_SIZE } = require('./constants');
+import { GRID_SIZE } from './constants.js';
 
-module.exports = {
-  initGame,
-  gameLoop,
-  getUpdatedVelocity,
-}
-
-function initGame() {
+export function initGame() {
   const state = createGameState()
   randomFood(state);
   return state;
 }
 
-function createGameState() {
+export function createGameState() {
   return {
     players: [{
       pos: {
@@ -48,7 +42,7 @@ function createGameState() {
   };
 }
 
-function gameLoop(state) {
+export function gameLoop(state) {
   if (!state) {
     return;
   }
@@ -109,8 +103,8 @@ function gameLoop(state) {
   return false;
 }
 
-function randomFood(state) {
-  food = {
+export function randomFood(state) {
+  let food = {
     x: Math.floor(Math.random() * GRID_SIZE),
     y: Math.floor(Math.random() * GRID_SIZE),
   }
@@ -130,7 +124,7 @@ function randomFood(state) {
   state.food = food;
 }
 
-function getUpdatedVelocity(keyCode) {
+export function getUpdatedVelocity(keyCode) {
   switch (keyCode) {
     case 37: { // left
       return { x: -1, y: 0 };

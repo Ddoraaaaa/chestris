@@ -1,30 +1,35 @@
-const io = require('socket.io')();
-const { initGame, gameLoop, getUpdatedVelocity } = require('./game');
-const { FRAME_RATE } = require('./constants');
-const { makeid } = require('./utils');
+import { Server } from "socket.io";
+import { initGame, gameLoop, getUpdatedVelocity } from "./src/game.js";
+import { FRAME_RATE, CODE_LENGTH } from "./src/constants.js";
+import { makeId } from "./src/utils.js";
 
 const state = {};
 const clientRooms = {};
 
+const io = new Server()
 
 io.on('connection', client => {
-  console.log(5);
 
   client.on('keydown', handleKeydown);
-  client.on('newGame', handleNewGame);
-  client.on('joinGame', handleJoinGame);
+  client.on('keyup', handleKeyup);
+  client.on('joinRoom', handleJoinRoom);
+  client.on('newRoom', handleNewRoom);
+  client.on('startGame', handleStartGame);
 
-  function handleJoinGame(roomName) {
-    const room = io.sockets.adapter.rooms[roomName];
+  function handleJoinRoom(roomName) {
+    console.log(roomName)
+    const room = io.sockets.adapter.rooms.get(roomName);
+    console.log(io.sockets.adapter.rooms)
+    console.log(room)
 
     let allUsers;
     if (room) {
-      allUsers = room.sockets;
+      allUsers = Array.from(room);
     }
 
     let numClients = 0;
     if (allUsers) {
-      numClients = Object.keys(allUsers).length;
+      numClients = allUsers.length;
     }
 
     if (numClients === 0) {
@@ -39,21 +44,29 @@ io.on('connection', client => {
 
     client.join(roomName);
     client.number = 2;
-    client.emit('init', 2);
-    
-    startGameInterval(roomName);
+    client.emit('init', 2, roomName);
   }
 
-  function handleNewGame() {
-    let roomName = makeid(5);
+  function handleNewRoom() {
+    let roomName = makeId(CODE_LENGTH);
     clientRooms[client.id] = roomName;
-    client.emit('gameCode', roomName);
-
-    state[roomName] = initGame();
+    client.emit('roomCode', roomName);
 
     client.join(roomName);
     client.number = 1;
-    client.emit('init', 1);
+    client.emit('init', 1, roomName);
+    console.log(io.sockets.adapter.rooms)
+    
+    console.log(state[roomName])
+  }
+
+  function handleStartGame(roomName) {
+    console.log("reached here");
+    state[roomName] = initGame();
+    
+    startGameInterval(roomName);
+    io.sockets.in(roomName)
+      .emit('initGame', roomName);
   }
 
   function handleKeydown(keyCode) {
@@ -74,6 +87,10 @@ io.on('connection', client => {
       state[roomName].players[client.number - 1].vel = vel;
     }
   }
+
+  function handleKeyup(keyCode) {
+    return;
+  }
 });
 
 function startGameInterval(roomName) {
@@ -91,7 +108,6 @@ function startGameInterval(roomName) {
 }
 
 function emitGameState(room, gameState) {
-  // Send this event to everyone in the room.
   io.sockets.in(room)
     .emit('gameState', JSON.stringify(gameState));
 }
