@@ -1,9 +1,10 @@
 import { Server } from "socket.io";
-import { initGame, gameLoop } from "./src/game/game.js";
+import { initGame, gameLoop, updateEmittedState } from "./src/game/game.js";
 import { FRAME_RATE, CODE_LENGTH } from "./src/constants.js";
 import { makeId } from "./src/utils.js";
 
 const state = {};
+const emittedState = {};
 const clientRooms = {};
 
 const io = new Server()
@@ -62,7 +63,8 @@ io.on('connection', client => {
 
     function handleStartGame(roomName) {
         console.log("reached here");
-        state[roomName] = initGame();
+        [state[roomName], emittedState[roomName]] = initGame();
+        console.log("hi", state[roomName]);
         
         startGameInterval(roomName);
         io.sockets.in(roomName)
@@ -81,9 +83,11 @@ io.on('connection', client => {
 function startGameInterval(roomName) {
     const intervalId = setInterval(() => {
         const winner = gameLoop(state[roomName]);
-        
+        copy
+
         if (!winner) {
-            emitGameState(roomName, state[roomName])
+            updateEmittedState(state[roomName], emittedState[roomName]);
+            emitGameState(roomName, emittedState[roomName])
         } else {
             emitGameOver(roomName, winner);
             state[roomName] = null;

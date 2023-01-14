@@ -71,7 +71,7 @@ export default class gameBoard {
         this.activePiece = this.getNextPiece();
         this.activePiecePos = PIECE_SPAWN[this.activePiece];
         this.activePieceRot = 0;
-        if(this.checkCollision( this.activePiece,
+        if(!this.checkCollision( this.activePiece,
                                 this.activePiecePos,
                                 this.activePieceRot)) {
             this.gameOver = true;
@@ -190,7 +190,8 @@ export default class gameBoard {
         const yVals = PIECE_POSITION[pieceId][rot].y;
         for(let i = 0; i < 4; i++) {
             const [x, y] = [xVals[i] + pos[0], yVals[i] + pos[1]];
-            if(checkPos(x, y)) {
+            if(this.checkPos(x, y)) {
+                console.log(x, y, "failed here!!");
                 return false;
             }
         }
@@ -341,8 +342,7 @@ export default class gameBoard {
     }
 
     //return an object of the board state, to pass to the client for rendering
-    makeBoardObject = () => {
-        res = {}
+    makeBoardObject = (res) => {
         res.board = this.board;
         res.garbageQueue = this.garbageQueue;
         res.heldPiece = this.heldPiece;
@@ -350,6 +350,5 @@ export default class gameBoard {
         res.activePiece = this.activePiece;
         res.activePiecePos = this.activePiecePos;
         res.activePieceRot = this.activePieceRot;
-        return res;
     }
 }
