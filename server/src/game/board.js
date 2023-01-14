@@ -1,11 +1,11 @@
-import { B2B_DMG, BOARD_HEIGHT, BOARD_WIDTH, LINE_DMG, PC_DMG, PIECE_POSITION, PIECE_SPAWN, PREVIEW_QUEUE, ROTATION_OFFSET, TSPIN_CHECK, TSPIN_DMG } from "../constants.js";
+import { B2B_DMG, BOARD_HEIGHT, BOARD_WIDTH, COMBO_DMG, LINE_DMG, PC_DMG, PIECE_POSITION, PIECE_SPAWN, PREVIEW_QUEUE, ROTATION_OFFSET, TSPIN_CHECK, TSPIN_DMG } from "../constants.js";
 
 export default class gameBoard {
     // 0:none 1:L 2:J 3:S 4:Z 5:I 6:O 7:T 8:garbage
     // board: 1->40:D->U then 1->10:L->R 
     constructor(bagSize) {
         //the actual board
-        this.board = new Array(BOARD_HEIGHT + 1).fill(0);
+        this.board = new Array(BOARD_HEIGHT + 1).fill("0000000000");
         this.boardMask = new Array(BOARD_HEIGHT + 1).fill(0);
 
         //things around the board
@@ -32,6 +32,8 @@ export default class gameBoard {
             this.heldPiece = this.getNextPiece();
         }
         [this.heldPiece, this.activePiece] = [this.activePiece, this.heldPiece];
+        this.activePiecePos = [...PIECE_SPAWN[this.activePiece]];
+        this.activePieceRot = 0;
     }
 
     //get next piece in next queue. remove it from next queue
@@ -69,7 +71,7 @@ export default class gameBoard {
     //+++++++++++++++++++ PIECE HANDLING +++++++++++++++++++++++++++++++++++++
     spawnPiece = () => {
         this.activePiece = this.getNextPiece();
-        this.activePiecePos = PIECE_SPAWN[this.activePiece];
+        this.activePiecePos = [...PIECE_SPAWN[this.activePiece]];
         this.activePieceRot = 0;
         if(!this.checkCollision( this.activePiece,
                                 this.activePiecePos,
@@ -77,6 +79,7 @@ export default class gameBoard {
             this.gameOver = true;
         }
     }
+
     hardDrop = () => {
         this.softDrop(BOARD_HEIGHT);
         this.applyPiece();
@@ -85,14 +88,18 @@ export default class gameBoard {
         damage = this.cancelGarbage(damage);
         this.lastMove = 0;
         this.isTSpin = 0;
+        this.addGarbage();
         this.spawnPiece();
+        return damage;
     }
 
     //times rotated clockwisely
     rotatePiece = (timesRot) => {
-        newRot = (this.activePieceRot + timesRot) & 3;
-        rotOffset = this.getTests(this.activePieceRot, newRot, this.activePiece);
-        for(let [x, y] in rotOffset) {
+        let newRot = (this.activePieceRot + timesRot) & 3;
+        let rotOffset = this.getTests(this.activePieceRot, newRot, this.activePiece);
+        // console.log("lmao", rotOffset);
+        for(let [x, y] of rotOffset) {
+            // console.log(x, y, "please just work");
             if(this.checkCollision( this.activePiece,
                                     [
                                         this.activePiecePos[0] + x,
@@ -118,8 +125,8 @@ export default class gameBoard {
                                         this.activePiecePos[1],
                                     ],
                                     this.activePieceRot)) {
-                this.activePiecePos[0]--;
                 this.lastMove = 0;
+                this.activePiecePos[0]--;
             }
             else {
                 return;
@@ -153,19 +160,23 @@ export default class gameBoard {
         const yVals = PIECE_POSITION[this.activePiece][this.activePieceRot].y;
         for(let i = 0; i < 4; i++) {
             const [x, y] =  [
-                                xVals[i] + this.activePiecePos.x, 
-                                yVals[i] + this.activePiecePos.y
+                                xVals[i] + this.activePiecePos[0], 
+                                yVals[i] + this.activePiecePos[1]
                             ];
             this.makePos(x, y, this.activePiece);
         }
         //check t spin
-        if(this.pieceId == 7) {
+        console.log(this.activePiece);
+        if(this.activePiece == 7) {
             this.isTSpin = 0;
             for(let [addX, addY] of TSPIN_CHECK) {
-                if(this.checkPos(this.activePiecePos[0] + addX, this.activePiecePos[0] + addY)) {
+                console.log("wtf help", addX, addY, this.activePiecePos);
+                if(this.checkPos(this.activePiecePos[0] + addX, this.activePiecePos[1] + addY)) {
                     this.isTSpin++;
                 }
             }
+
+            console.log("is it t spin?", this.isTSpin);
             if(this.isTSpin >= 3) {
                 this.isTSpin = true;
             }
@@ -173,27 +184,32 @@ export default class gameBoard {
                 this.isTSpin = false;
             }
         }
+        console.log("is it t spin? no for real pls", this.isTSpin);
     }
 
     getTests = (oldRot, newRot, pieceId) => {
+        // console.log(this.activePiecePos.type);
+        // console.log(this.activePiecePos);
         let [x, y] = this.activePiecePos;
-        const oldRotOff = ROTATION_OFFSET[(pieceId == 5)][oldRot];
-        const newRotOff = ROTATION_OFFSET[(pieceId == 5)][newRot];
+        // console.log(ROTATION_OFFSET);
+        const oldRotOff = ROTATION_OFFSET[(pieceId == 5 ? 1 : 0)][oldRot];
+        const newRotOff = ROTATION_OFFSET[(pieceId == 5 ? 1 : 0)][newRot];
+        // console.log("wtflmao???", newRotOff);
         let rotOffset = oldRotOff.map((val, index) => {
-            return val - newRotOff[index];
+            return [val[0] - newRotOff[index][0], val[1] - newRotOff[index][1]];
         });
         return rotOffset;
     } 
 
     checkCollision = (pieceId, pos, rot) => {
-        console.log(pieceId, pos, rot);
-        console.log(PIECE_POSITION[pieceId]);
+        // console.log(pieceId, pos, rot);
+        // console.log(PIECE_POSITION[pieceId]);
         const xVals = PIECE_POSITION[pieceId][rot].x;
         const yVals = PIECE_POSITION[pieceId][rot].y;
         for(let i = 0; i < 4; i++) {
             const [x, y] = [xVals[i] + pos[0], yVals[i] + pos[1]];
             if(this.checkPos(x, y)) {
-                console.log(x, y, "failed here!!");
+                // console.log(x, y, "failed here!!");
                 return false;
             }
         }
@@ -203,25 +219,29 @@ export default class gameBoard {
     //++++++++++++++++ MINO HANDLING +++++++++++++++++++++++++++++++++++++++++
     //get type of mino at row i, col j
     atPos = (i, j) => {
-        return (this.board[i] >> (4 * (j - 1))) & 15;
+        return Number(this.board[i][j-1]);
+        // return (this.board[i] >> (4 * (j - 1))) & 15;
     }
 
     checkPos = (i, j) => {
-        if(i < 1 || j < 1 || i > BOARD_HEIGHT || j > BOARD_WIDTH) return false;
+        console.log(i, j);
+        if(i < 1 || j < 1 || i > BOARD_HEIGHT || j > BOARD_WIDTH) return true;
         return (this.boardMask[i] >> (j - 1)) & 1;
     }
 
     //update mino at row i, col j to val
     makePos = (i, j, val) => {
-        let valAtPos = (this.board[i] >> (4 * (j - 1))) & 15;
-        valAtPos = val - valAtPos;  
-        this.board[i]+= valAtPos << (4 * (j - 1));
-        if(val == 1) {
+        // console.log("assigning", i, j, val);
+        this.board[i] = this.board[i].substring(0, j-1) + String(val) + this.board[i].substring(j);
+        // let valAtPos = (this.board[i] >> (4 * (j - 1))) & 15;
+        // console.log(valAtPos);
+        // valAtPos = val - valAtPos;  
+        // console.log(valAtPos, valAtPos << (4 * (j - 1)), valAtPos, 4*(j-1),2 << 36);
+        // this.board[i]+= valAtPos << (4 * (j - 1));
+        if(val >= 1) {
             this.boardMask[i] |= 1 << (j - 1);
         }
-        else {
-            this.boardMask[i] &= (1 << BOARD_WIDTH) - 1 - (1 << (j - 1));
-        }
+        // console.log(this.board[i]);
     }
 
     //+++++++++++++++++++ BOARD HANDLING +++++++++++++++++++++++++++++++++++++
@@ -230,6 +250,7 @@ export default class gameBoard {
         let clearedLine = 0;
         for(let i = this.board.length - 1; i > 0; i--) {
             if(this.boardMask[i] == (1 << BOARD_WIDTH) - 1) {
+                // console.log("cleared at", i);
                 this.board.splice(i, 1);
                 this.boardMask.splice(i, 1);
                 clearedLine++;
@@ -241,6 +262,7 @@ export default class gameBoard {
 
     //get the amount of damage dealt
     calculateDamage = (clearedLine) => {
+        console.log("debugging cleared line", clearedLine);
         let res = 0;
         if(!clearedLine) {
             this.comboCount = 0;
@@ -257,10 +279,12 @@ export default class gameBoard {
         if(this.lastMove) {
             if(this.isTSpin) {
                 this.backToBack++;
+                console.log("has t spin");
                 res += TSPIN_DMG[clearedLine];
             }
             else if(this.pieceId <= 4 && clearedLine == 3) {
                 this.backToBack++;
+                console.log("has spin");
                 res += TSPIN_DMG[clearedLine];
             }
             else {
@@ -270,8 +294,10 @@ export default class gameBoard {
         else {
             this.backToBack = 0;
         }
+        console.log("before combo", res);
         //damage for cleared lines or combo
         res += LINE_DMG[clearedLine] + COMBO_DMG[this.comboCount];
+        console.log("after combo", res);
 
         //damage for back to back
         for(let i of B2B_DMG) {
@@ -284,39 +310,58 @@ export default class gameBoard {
         }
 
         //damage for perfect clear
-        if(this.boardMask[0] == 0) {
+        
+        if(this.boardMask[1] == 0) {
+            console.log("has pc");
             res += PC_DMG;
         }
-        
+        console.log("finished. I have no fucking idea what is happening");
         return res;
     }
 
     gotSentGarbage = (garbage) => {
-        this.garbageQueue.push(garbage);
+        if(garbage > 0) {
+            this.garbageQueue.push(garbage);
+        }
     }
 
     //add the next garbage in queue
     addGarbage = () => {
-        if(!this.garbageQueue.len) return;
+        if(this.garbageQueue.len == 0) return;
+        const paddingLine = this.board.shift();
+        this.boardMask.shift();
         const nextGarbage = this.garbageQueue.shift();
         const garbagePos = Math.floor(Math.random() * BOARD_WIDTH);
-        let garbage = 0, garbageMask = 0;
+        let garbage = "", garbageMask = 0;
         for(let i = 0; i < BOARD_WIDTH; i++) {
             if(i != garbagePos) {
-                garbage |= 8 << (4 * i);
+                garbage += "8";
+                // garbage |= 8 << (4 * i);
                 garbageMask |= 1 << i;
+            }
+            else {
+                garbage+= "0";
             }
         }
         for(let i = 0; i < nextGarbage; i++) {
             this.board.unshift(garbage);
             this.boardMask.unshift(garbageMask);
         }
+        this.board.unshift(paddingLine);
+        this.boardMask.unshift(0);
         this.resizeBoard();
+        // console.log(this.board);
+        // console.log(this.boardMask);
     }
 
     cancelGarbage = (damage) => {
-        while(damage) {
-            if(!this.garbageQueue.len) {
+        // let cac = 10;
+        // console.log("hi, pls work", damage, this.garbageQueue);
+        while(damage != 0) {
+            // cac--;
+            // console.log("hi, why dont you work", damage, this.garbageQueue);
+            if(this.garbageQueue.length == 0) {
+                // console.log("hi, pls work!!1", damage, this.garbageQueue);
                 return damage;
             }
             if(this.garbageQueue[0] > damage) {
@@ -328,6 +373,7 @@ export default class gameBoard {
                 this.garbageQueue.shift();
             }
         }
+        // console.log("hi, pls work!!2", damage, this.garbageQueue);
         return damage;
     }
 
@@ -337,7 +383,7 @@ export default class gameBoard {
             this.board.push(0);
             this.boardMask.push(0);
         }
-        while(this.board.length > BOARD_HEIGHT) {
+        while(this.board.length > BOARD_HEIGHT + 1) {
             this.board.pop();
             this.boardMask.pop();
         }

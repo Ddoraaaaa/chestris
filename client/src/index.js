@@ -9,6 +9,8 @@ const socket = io("ws://localhost:3000", {
     transports: ["websocket", "polling", "flashsocket"],
 });
 
+const playerControls = JSON.parse(JSON.stringify(constants.DEFAULT_CONTROLS));
+
 socket.on("init", handleInit);
 socket.on("initGame", handleInitGame);
 socket.on("gameState", handleGameState);
@@ -51,9 +53,9 @@ function joinRoom() {
 }
 
 function startGame() {
-    console.log("pressed");
+    // console.log("pressed");
     socket.emit("startGame", _roomCode);
-    console.log("pressed");
+    // console.log("pressed");
 }
 
 let p1H, p1B, p1Q;
@@ -65,11 +67,8 @@ let gameHandling;
 let gameActive = false;
 
 function init() {
-    gameHandling = constants.DEFAULT_GAME_HANDLING;
-    keymaps.applyHandling(gameHandling);
-
-    console.log(gameHandling, "lmao");
-    console.log("why?")
+    // console.log(gameHandling, "lmao");
+    // console.log("why?")
 
     utils.hideElement(initialScreen);
     gameScreen.style.display = "block";
@@ -94,7 +93,7 @@ function init() {
 }
 
 function handleInitGame() {
-    console.log("lmao");
+    // console.log("lmao");
     roomCodeDisplay.style.display = "none";
     startBtn.style.display = "none";
 
@@ -104,15 +103,16 @@ function handleInitGame() {
 }
 
 function keydown(e) {
-    console.log(e.keyCode);
     if (!gameActive) {
         return;
     }
-    socket.emit("keydown", e.keyCode);
+    let keyCode =  Object.keys(playerControls.controls).find(key => playerControls.controls[key] === e.keyCode);
+    // console.log(keyCode);
+    socket.emit("keydown", keyCode);
 }
 
 function keyup(e) {
-    console.log(e.keyCode);
+    // console.log(e.keyCode);
     if (!gameActive) {
         return;
     }
@@ -120,19 +120,6 @@ function keyup(e) {
 }
 
 function drawGame(state) {
-    // console.log(state)
-    // ctx1.fillStyle = constants.BG_COLOUR;
-    // ctx1.fillRect(0, 0, canvas.width, canvas.height);
-
-    // const food = state.food;
-    // const gridsize = state.gridsize;
-    // const size = canvas.width / gridsize;
-
-    // ctx.fillStyle = constants.FOOD_COLOUR;
-    // ctx.fillRect(food.x * size, food.y * size, size, size);
-
-    // paintPlayer(state.players[0], size, constants.SNAKE_COLOUR);
-    // paintPlayer(state.players[1], size, "red");
     drawHold(p1Hc, p1H, state.p1Board, state.p1TimeLeft);
     drawBoard(p1Bc, p1B, state.p1Board, state.p1TimeLeft);
     // console.log("PLEASE???");

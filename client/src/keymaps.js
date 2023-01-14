@@ -1,6 +1,10 @@
 import * as utils from "./utils";
 import * as constants from "./constants";
 
+export function updateKeys() {
+    return;
+}
+
 export function rgKeyDown(elem, event) {
     if(event.keyCode == 27) {
         elem.value="";

@@ -34,7 +34,7 @@ export function drawHold(ctx, canvas, state, timeLeft) {
     ctx.save();
         ctx.translate(CV_PAD, CV_PAD);
         drawPiece(ctx, canvas, 0, MINO_SIZE * (3 + (state.heldPiece == 6 ? -1 : 0)), state.heldPiece, (state.heldPiece == 5 ? 2 : 0));
-        console.log(state, "hello");
+        // console.log(state, "hello");
     ctx.restore();
 }
 
@@ -62,7 +62,8 @@ export function drawBoard(ctx, canvas, state, timeLeft) {
             let pieceId;
             for(let i = 1; i <= BOARD_VISIBLE_HEIGHT; i++) {
                 for(let j = 1; j <= BOARD_WIDTH; j++) {
-                    pieceId = (state.board[i] >> (4 * (j - 1))) & 15;
+                    pieceId = Number(state.board[i][j-1]);
+                    // pieceId = (state.board[i] >> (4 * (j - 1))) & 15;
                     drawMino(ctx, canvas, (j - 1) * MINO_SIZE, (BOARD_VISIBLE_HEIGHT - i) * MINO_SIZE, pieceId);
                 }
             }
@@ -78,7 +79,7 @@ export function drawBoard(ctx, canvas, state, timeLeft) {
 }
 
 export function drawQueue(ctx, canvas, state, timeLeft) {
-    console.log("drawing queue");
+    // console.log("drawing queue");
     ctx.fillStyle = BOARD_BACKGROUND;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     // ctx.fillRect(CV_PAD / 2, CV_PAD / 2, canvas.width - CV_PAD, canvas.height - CV_PAD);

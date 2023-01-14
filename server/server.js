@@ -18,10 +18,10 @@ io.on('connection', client => {
     client.on('startGame', handleStartGame);
 
     function handleJoinRoom(roomName) {
-        console.log(roomName)
+        // console.log(roomName)
         const room = io.sockets.adapter.rooms.get(roomName);
-        console.log(io.sockets.adapter.rooms)
-        console.log(room)
+        // console.log(io.sockets.adapter.rooms)
+        // console.log(room)
 
         let allUsers;
         if (room) {
@@ -56,15 +56,15 @@ io.on('connection', client => {
         client.join(roomName);
         client.number = 1;
         client.emit('init', 1, roomName);
-        console.log(io.sockets.adapter.rooms)
+        // console.log(io.sockets.adapter.rooms)
         
-        console.log(state[roomName])
+        // console.log(state[roomName])
     }
 
     function handleStartGame(roomName) {
-        console.log("reached here");
+        // console.log("reached here");
         [state[roomName], emittedState[roomName]] = initGame();
-        console.log("hi", state[roomName]);
+        // console.log("hi", state[roomName]);
         
         startGameInterval(roomName);
         io.sockets.in(roomName)
@@ -72,7 +72,43 @@ io.on('connection', client => {
     }
 
     function handleKeydown(keyCode) {
-        return;
+        const roomName = clientRooms[client.id];
+        let thisPlayer = state[roomName].p1Board;
+        let otherPlayer = state[roomName].p2Board;
+        if(client.number == 2) {
+            [thisPlayer, otherPlayer] = [otherPlayer, thisPlayer];
+        }
+        switch(keyCode) {
+            case "hd":
+                let damageDealt = thisPlayer.hardDrop();
+                console.log(damageDealt);
+                if(damageDealt) {
+                    otherPlayer.gotSentGarbage(damageDealt);
+                }
+                break;
+            case "sd":
+                thisPlayer.softDrop(20);
+                break;
+            case "rcw":
+                thisPlayer.rotatePiece(1);
+                break;
+            case "r180":
+                thisPlayer.rotatePiece(2);
+                break;
+            case "rccw":
+                thisPlayer.rotatePiece(3);
+                break;
+            case "hold":
+                thisPlayer.holdPiece();
+                break;
+            case "left":
+                thisPlayer.moveSideways(1, -1);
+                break;
+            case "right":
+                thisPlayer.moveSideways(1, 1);
+                break;
+        }
+        updateEmittedState(state[roomName], emittedState[roomName]);
     }
 
     function handleKeyup(keyCode) {
@@ -88,6 +124,8 @@ function startGameInterval(roomName) {
             updateEmittedState(state[roomName], emittedState[roomName]);
             emitGameState(roomName, emittedState[roomName])
         } else {
+            updateEmittedState(state[roomName], emittedState[roomName]);
+            emitGameState(roomName, emittedState[roomName])
             emitGameOver(roomName, winner);
             state[roomName] = null;
             clearInterval(intervalId);

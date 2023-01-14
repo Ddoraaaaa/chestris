@@ -1,16 +1,22 @@
 export const CTRL_KEYS = ["das", "arr", "right", "left", "sd", "hd", "hold", "rcw", "rccw", "r180"];
 export const LMAO = "1";
 
-export const DEFAULT_GAME_HANDLING = {
-    "das": 170,
-    "arr": 50,
-    "left": 37,
-    "right": 39,
-    "sd": 51,
-    "hd": 32,
-    "hold": 67,
-    "rcw": 38
-};
+export const DEFAULT_CONTROLS = {
+    handling: {
+        das: 170,
+        arr: 50
+    },
+    controls: {
+        left: 37,
+        right: 39,
+        sd: 40,
+        hd: 32,
+        hold: 67,
+        rcw: 38,
+        rccw: -1,
+        r180: -1
+    }
+}
 
 //BOARD AND GAMEFIELD
 

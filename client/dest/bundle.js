@@ -4,15 +4,21 @@ var dd = (function (exports) {
     const CTRL_KEYS$1 = ["das", "arr", "right", "left", "sd", "hd", "hold", "rcw", "rccw", "r180"];
     const LMAO = "1";
 
-    const DEFAULT_GAME_HANDLING = {
-        "das": 170,
-        "arr": 50,
-        "left": 37,
-        "right": 39,
-        "sd": 51,
-        "hd": 32,
-        "hold": 67,
-        "rcw": 38
+    const DEFAULT_CONTROLS = {
+        handling: {
+            das: 170,
+            arr: 50
+        },
+        controls: {
+            left: 37,
+            right: 39,
+            sd: 40,
+            hd: 32,
+            hold: 67,
+            rcw: 38,
+            rccw: -1,
+            r180: -1
+        }
     };
 
     //BOARD AND GAMEFIELD
@@ -92,7 +98,7 @@ var dd = (function (exports) {
         BOARD_WIDTH: BOARD_WIDTH,
         CTRL_KEYS: CTRL_KEYS$1,
         CV_PAD: CV_PAD,
-        DEFAULT_GAME_HANDLING: DEFAULT_GAME_HANDLING,
+        DEFAULT_CONTROLS: DEFAULT_CONTROLS,
         GARBAGE_COLOR: GARBAGE_COLOR,
         GARBAGE_SIZE: GARBAGE_SIZE,
         LMAO: LMAO,
@@ -147,6 +153,10 @@ var dd = (function (exports) {
         setCookie: setCookie
     });
 
+    function updateKeys() {
+        return;
+    }
+
     function rgKeyDown(elem, event) {
         if(event.keyCode == 27) {
             elem.value="";
@@ -196,7 +206,8 @@ var dd = (function (exports) {
         mapKeys: mapKeys,
         resetKeys: resetKeys,
         rgKeyDown: rgKeyDown,
-        rgKeyUp: rgKeyUp
+        rgKeyUp: rgKeyUp,
+        updateKeys: updateKeys
     });
 
     function drawMino(ctx, canvas, x, y, pieceId) {
@@ -261,7 +272,8 @@ var dd = (function (exports) {
                 let pieceId;
                 for(let i = 1; i <= BOARD_VISIBLE_HEIGHT; i++) {
                     for(let j = 1; j <= BOARD_WIDTH; j++) {
-                        pieceId = (state.board[i] >> (4 * (j - 1))) & 15;
+                        pieceId = Number(state.board[i][j-1]);
+                        // pieceId = (state.board[i] >> (4 * (j - 1))) & 15;
                         drawMino(ctx, canvas, (j - 1) * MINO_SIZE, (BOARD_VISIBLE_HEIGHT - i) * MINO_SIZE, pieceId);
                     }
                 }
@@ -292,6 +304,8 @@ var dd = (function (exports) {
     const socket = io("ws://localhost:3000", {
         transports: ["websocket", "polling", "flashsocket"],
     });
+
+    const playerControls = JSON.parse(JSON.stringify(DEFAULT_CONTROLS));
 
     socket.on("init", handleInit);
     socket.on("initGame", handleInitGame);
@@ -349,9 +363,6 @@ var dd = (function (exports) {
     let gameActive = false;
 
     function init() {
-        gameHandling = DEFAULT_GAME_HANDLING;
-        applyHandling(gameHandling);
-
         console.log(gameHandling, "lmao");
         console.log("why?");
 
@@ -388,11 +399,12 @@ var dd = (function (exports) {
     }
 
     function keydown(e) {
-        console.log(e.keyCode);
         if (!gameActive) {
             return;
         }
-        socket.emit("keydown", e.keyCode);
+        let keyCode =  Object.keys(playerControls.controls).find(key => playerControls.controls[key] === e.keyCode);
+        console.log(keyCode);
+        socket.emit("keydown", keyCode);
     }
 
     function keyup(e) {
@@ -404,19 +416,6 @@ var dd = (function (exports) {
     }
 
     function drawGame(state) {
-        // console.log(state)
-        // ctx1.fillStyle = constants.BG_COLOUR;
-        // ctx1.fillRect(0, 0, canvas.width, canvas.height);
-
-        // const food = state.food;
-        // const gridsize = state.gridsize;
-        // const size = canvas.width / gridsize;
-
-        // ctx.fillStyle = constants.FOOD_COLOUR;
-        // ctx.fillRect(food.x * size, food.y * size, size, size);
-
-        // paintPlayer(state.players[0], size, constants.SNAKE_COLOUR);
-        // paintPlayer(state.players[1], size, "red");
         drawHold(p1Hc, p1H, state.p1Board, state.p1TimeLeft);
         drawBoard(p1Bc, p1B, state.p1Board, state.p1TimeLeft);
         // console.log("PLEASE???");
