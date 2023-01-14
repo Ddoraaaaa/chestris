@@ -4,7 +4,8 @@ export const LMAO = "1";
 export const DEFAULT_CONTROLS = {
     handling: {
         das: 170,
-        arr: 50
+        arr: 50,
+        grav: 50,
     },
     controls: {
         left: 37,

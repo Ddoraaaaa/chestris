@@ -7,7 +7,8 @@ var dd = (function (exports) {
     const DEFAULT_CONTROLS = {
         handling: {
             das: 170,
-            arr: 50
+            arr: 50,
+            grav: 50,
         },
         controls: {
             left: 37,
@@ -244,7 +245,7 @@ var dd = (function (exports) {
         ctx.save();
             ctx.translate(CV_PAD, CV_PAD);
             drawPiece(ctx, canvas, 0, MINO_SIZE * (3 + (state.heldPiece == 6 ? -1 : 0)), state.heldPiece, (state.heldPiece == 5 ? 2 : 0));
-            console.log(state, "hello");
+            // console.log(state, "hello");
         ctx.restore();
     }
 
@@ -289,7 +290,7 @@ var dd = (function (exports) {
     }
 
     function drawQueue(ctx, canvas, state, timeLeft) {
-        console.log("drawing queue");
+        // console.log("drawing queue");
         ctx.fillStyle = BOARD_BACKGROUND;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         // ctx.fillRect(CV_PAD / 2, CV_PAD / 2, canvas.width - CV_PAD, canvas.height - CV_PAD);
@@ -304,8 +305,6 @@ var dd = (function (exports) {
     const socket = io("ws://localhost:3000", {
         transports: ["websocket", "polling", "flashsocket"],
     });
-
-    const playerControls = JSON.parse(JSON.stringify(DEFAULT_CONTROLS));
 
     socket.on("init", handleInit);
     socket.on("initGame", handleInitGame);
@@ -349,9 +348,9 @@ var dd = (function (exports) {
     }
 
     function startGame() {
-        console.log("pressed");
+        // console.log("pressed");
         socket.emit("startGame", _roomCode);
-        console.log("pressed");
+        // console.log("pressed");
     }
 
     let p1H, p1B, p1Q;
@@ -359,12 +358,20 @@ var dd = (function (exports) {
     let p2H, p2B, p2Q;
     let p2Hc, p2Bc, p2Qc;
     let playerNumber;
-    let gameHandling;
     let gameActive = false;
 
+    const playerControls = JSON.parse(JSON.stringify(DEFAULT_CONTROLS));
+    const controlState = {
+        dasCnt: 0,
+        dasDir: "N",
+        dasTime: null,
+
+        downCnt: 0,
+        downTime: null,
+    };
+
     function init() {
-        console.log(gameHandling, "lmao");
-        console.log("why?");
+        // console.log("why?")
 
         hideElement(initialScreen);
         gameScreen.style.display = "block";
@@ -389,7 +396,7 @@ var dd = (function (exports) {
     }
 
     function handleInitGame() {
-        console.log("lmao");
+        // console.log("lmao");
         roomCodeDisplay.style.display = "none";
         startBtn.style.display = "none";
 
@@ -403,16 +410,58 @@ var dd = (function (exports) {
             return;
         }
         let keyCode =  Object.keys(playerControls.controls).find(key => playerControls.controls[key] === e.keyCode);
-        console.log(keyCode);
-        socket.emit("keydown", keyCode);
+        switch(keyCode) {
+            case "hd":
+                socket.emit("addAction", ["hd", 0]);
+            case "sd":
+                controlState.downCnt = 1;
+                controlState.downTime = Number(Date.now());
+                break;
+            case "rcw":
+                socket.emit("addAction", ["rcw", 1]);
+                break;
+            case "r180":
+                socket.emit("addAction", ["rcw", 2]);
+                break;
+            case "rccw":
+                socket.emit("addAction", ["rcw", 3]);
+                break;
+            case "hold":
+                socket.emit("addAction", ["hold", 0]);
+                break;
+            case "left":
+                controlState.dasDir = "left";
+                controlState.dasCnt = 1;
+                controlState.dasTime = Number(Date.now()) + playerControls.handling.das;
+            case "right":
+                controlState.dasDir = "right";
+                controlState.dasCnt = 1;
+                controlState.dasTime = Number(Date.now()) + playerControls.handling.das;
+        }
     }
 
     function keyup(e) {
-        console.log(e.keyCode);
         if (!gameActive) {
             return;
         }
-        socket.emit("keyup", e.keyCode);
+        let keyCode =  Object.keys(playerControls.controls).find(key => playerControls.controls[key] === e.keyCode);    
+        switch(keyCode) {
+            case "sd":
+                controlState.downTime = null;
+                break;
+            case "left":
+                if(controlState.dasDir == "left") {
+                    controlState.dasDir = "N";
+                    controlState.dasTime = null;
+                }
+                break;
+            case "right":
+                if(controlState.dasDir == "right") {
+                    controlState.dasDir = "N";
+                    controlState.dasTime = null;
+                }
+                break;
+        }
     }
 
     function drawGame(state) {
@@ -429,12 +478,37 @@ var dd = (function (exports) {
     function handleInit(number, roomCode) {
         playerNumber = number;
         _roomCode = roomCode;
+        // updateKeys
     }
 
     function handleGameState(gameState) {
         if (!gameActive) {
             return;
         }
+        //horizontal movement
+        let curTime = Number(Date.now()), timesDid;
+        if(controlState.dasDir != "N") {
+            timesDid = Math.floor((curTime - controlState.dasTime) / playerControls.handling.arr);
+            controlState.dasCnt+= timesDid;
+            controlState.dasTime += timesDid * playerControls.handling.arr;
+        }
+        if(controlState.dasCnt) {
+            socket.emit("addAction", [controlState.dasDir, controlState.dasCnt]);
+            controlState.dasCnt = 0;
+        }
+
+        //vertical movement
+        if(controlState.downTime != null) {
+            timesDid = Math.floor((curTime - controlState.downTime) / playerControls.handling.grav);
+            controlState.downCnt+= timesDid;
+            controlState.downTime += timesDid * playerControls.handling.grav;
+        }
+        if(controlState.downCnt) {
+            socket.emit("addAction", ["sd", controlState.downCnt]);
+            controlState.downCnt = 0;
+        }
+
+        //do more stuff
         gameState = JSON.parse(gameState);
         requestAnimationFrame(() => drawGame(gameState));
         // requestAnimationFrame(() => console.log(gameState));

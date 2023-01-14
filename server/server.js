@@ -11,8 +11,7 @@ const io = new Server()
 
 io.on('connection', client => {
 
-    client.on('keydown', handleKeydown);
-    client.on('keyup', handleKeyup);
+    client.on('addAction', handleAction);
     client.on('joinRoom', handleJoinRoom);
     client.on('newRoom', handleNewRoom);
     client.on('startGame', handleStartGame);
@@ -71,13 +70,16 @@ io.on('connection', client => {
             .emit('initGame', roomName);
     }
 
-    function handleKeydown(keyCode) {
+    function handleAction(actions) {
         const roomName = clientRooms[client.id];
         let thisPlayer = state[roomName].p1Board;
         let otherPlayer = state[roomName].p2Board;
         if(client.number == 2) {
             [thisPlayer, otherPlayer] = [otherPlayer, thisPlayer];
         }
+        let [keyCode, timesDid] = actions
+        // let [keyCode, keyCode2] = keyCode1;
+        // console.log("hey", keyCode1);
         switch(keyCode) {
             case "hd":
                 let damageDealt = thisPlayer.hardDrop();
@@ -87,32 +89,22 @@ io.on('connection', client => {
                 }
                 break;
             case "sd":
-                thisPlayer.softDrop(20);
+                thisPlayer.softDrop(timesDid);
                 break;
             case "rcw":
-                thisPlayer.rotatePiece(1);
-                break;
-            case "r180":
-                thisPlayer.rotatePiece(2);
-                break;
-            case "rccw":
-                thisPlayer.rotatePiece(3);
+                thisPlayer.rotatePiece(timesDid);
                 break;
             case "hold":
                 thisPlayer.holdPiece();
                 break;
             case "left":
-                thisPlayer.moveSideways(1, -1);
+                thisPlayer.moveSideways(timesDid, -1);
                 break;
             case "right":
-                thisPlayer.moveSideways(1, 1);
+                thisPlayer.moveSideways(timesDid, 1);
                 break;
         }
         updateEmittedState(state[roomName], emittedState[roomName]);
-    }
-
-    function handleKeyup(keyCode) {
-        return;
     }
 });
 
