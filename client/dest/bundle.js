@@ -15,14 +15,74 @@ var dd = (function (exports) {
         "rcw": 38
     };
 
+    //BOARD AND GAMEFIELD
+
     const BOARD_BACKGROUND = "#303030";
+    const GARBAGE_COLOR = "#DD0000";
     const BOARD_HEIGHT = 40;
     const BOARD_VISIBLE_HEIGHT = 20;
     const BOARD_WIDTH = 10;
     const PREVIEW_QUEUE = 5;
     const MINO_SIZE = 30;
-    const GARBAGE_SIZE = 4;
-    const CV_PAD = 10;
+    const GARBAGE_SIZE = 6;
+    const CV_PAD = 20;
+
+    //PIECE
+    const PIECE_COLOR = [   BOARD_BACKGROUND,  //none
+                            "#ea620e",  //orange    L
+                            "#2141C6",  //blue      J
+                            "#58B103",  //green     S
+                            "#D70F37",  //red       Z
+                            "#109BD7",  //sky blue  I
+                            "#E39F00",  //yellow    O  
+                            "#AF2989",  //purple    T
+                            "#909090"]; //gray      garbage
+
+    const PIECE_POSITION = [
+        [],                                       //                     No piece
+        [
+            { x: [1, 1, 1, 2], y: [0, 1, 2, 2] }, // ..# .#. ... ##.     L piece
+            { x: [0, 1, 2, 0], y: [1, 1, 1, 2] }, // ### .#. ### .#.
+            { x: [1, 1, 1, 0], y: [0, 1, 2, 0] }, // ... .## #.. .#.
+            { x: [0, 1, 2, 2], y: [1, 1, 1, 0] }  //
+        ],
+        [
+            { x: [1, 1, 1, 2], y: [0, 1, 2, 0] }, // #.. .## ... .#.     J piece
+            { x: [0, 1, 2, 2], y: [1, 1, 1, 2] }, // ### .#. ### .#.
+            { x: [1, 1, 1, 0], y: [0, 1, 2, 2] }, // ... .#. ..# ##.
+            { x: [0, 1, 2, 0], y: [1, 1, 1, 0] }  //
+        ],
+        [
+            { x: [1, 1, 2, 2], y: [0, 1, 1, 2] }, // .## .#. ... #..     S piece
+            { x: [2, 1, 1, 0], y: [1, 1, 2, 2] }, // ##. .## .## ##.
+            { x: [0, 0, 1, 1], y: [0, 1, 1, 2] }, // ... ..# ##. .#.
+            { x: [2, 1, 1, 0], y: [0, 0, 1, 1] }  //
+        ],
+        [
+            { x: [2, 2, 1, 1], y: [0, 1, 1, 2] }, // ##. ..# ... .#.     Z piece
+            { x: [2, 1, 1, 0], y: [2, 2, 1, 1] }, // .## .## ##. ##.
+            { x: [1, 1, 0, 0], y: [0, 1, 1, 2] }, // ... .#. .## #..
+            { x: [0, 1, 1, 2], y: [0, 0, 1, 1] }  //
+        ],
+        [
+            { x: [2, 2, 2, 2], y: [0, 1, 2, 3] }, // .... ..#. .... .#.. I piece
+            { x: [0, 1, 2, 3], y: [2, 2, 2, 2] }, // #### ..#. .... .#..
+            { x: [1, 1, 1, 1], y: [0, 1, 2, 3] }, // .... ..#. #### .#..
+            { x: [0, 1, 2, 3], y: [1, 1, 1, 1] }  // .... ..#. .... .#..
+        ],
+        [
+            { x: [0, 1, 0, 1], y: [0, 0, 1, 1] }, // ## ## ## ##         O piece
+            { x: [0, 1, 0, 1], y: [0, 0, 1, 1] }, // ## ## ## ##
+            { x: [0, 1, 0, 1], y: [0, 0, 1, 1] }, //
+            { x: [0, 1, 0, 1], y: [0, 0, 1, 1] }  //
+        ],
+        [
+            { x: [1, 1, 1, 2], y: [0, 1, 2, 1] }, // .#. .#. ... .#.     T piece
+            { x: [0, 1, 2, 1], y: [1, 1, 1, 2] }, // ### .## ### ##.
+            { x: [1, 1, 1, 0], y: [0, 1, 2, 1] }, // ... .#. .#. .#.
+            { x: [0, 1, 2, 1], y: [1, 1, 1, 0] }  //
+        ]
+    ];
 
     var constants = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -33,9 +93,12 @@ var dd = (function (exports) {
         CTRL_KEYS: CTRL_KEYS$1,
         CV_PAD: CV_PAD,
         DEFAULT_GAME_HANDLING: DEFAULT_GAME_HANDLING,
+        GARBAGE_COLOR: GARBAGE_COLOR,
         GARBAGE_SIZE: GARBAGE_SIZE,
         LMAO: LMAO,
         MINO_SIZE: MINO_SIZE,
+        PIECE_COLOR: PIECE_COLOR,
+        PIECE_POSITION: PIECE_POSITION,
         PREVIEW_QUEUE: PREVIEW_QUEUE
     });
 
@@ -137,32 +200,92 @@ var dd = (function (exports) {
     });
 
     function drawMino(ctx, canvas, x, y, pieceId) {
+        // console.log("drawing mino at: ", x, y, pieceId);
+        ctx.save();
+            ctx.fillStyle = PIECE_COLOR[pieceId];
+            ctx.fillRect(x + 1, y + 1, MINO_SIZE - 2, MINO_SIZE - 2);
+        ctx.restore();
+    }
 
+    function drawPiece(ctx, canvas, x, y, pieceId, rot) {
+        if(pieceId==0) {
+            return;
+        }
+        // console.log(x, y, pieceId, rot);
+        ctx.save();
+        const xVals = PIECE_POSITION[pieceId][rot].x;
+        const yVals = PIECE_POSITION[pieceId][rot].y;
+        for(let i = 0; i < 4; i++) {
+                // console.log("???")
+                const [xDraw, yDraw] =  [
+                                            x + yVals[i] * MINO_SIZE,
+                                            y - (xVals[i] + 1) * MINO_SIZE
+                                        ]; 
+                drawMino(ctx, canvas, xDraw, yDraw, pieceId);
+            }
+        ctx.restore();
     }
 
     function drawHold(ctx, canvas, state, timeLeft) {
         ctx.fillStyle = BOARD_BACKGROUND;
-        ctx.fillRect(CV_PAD / 2, CV_PAD / 2, canvas.width - CV_PAD, canvas.height - CV_PAD);
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // ctx.fillRect(CV_PAD / 2, CV_PAD / 2, canvas.width - CV_PAD, canvas.height - CV_PAD);
         ctx.save();
-        ctx.translate(CV_PAD, CV_PAD);
-        //ACTUALLY START DRAWING
-        console.log(state, "hello");
+            ctx.translate(CV_PAD, CV_PAD);
+            drawPiece(ctx, canvas, 0, MINO_SIZE * (3 + (state.heldPiece == 6 ? -1 : 0)), state.heldPiece, (state.heldPiece == 5 ? 2 : 0));
+            console.log(state, "hello");
         ctx.restore();
     }
 
     function drawBoard(ctx, canvas, state, timeLeft) {
         ctx.fillStyle = BOARD_BACKGROUND;
-        ctx.fillRect(CV_PAD / 2, CV_PAD / 2, canvas.width - CV_PAD, canvas.height - CV_PAD);
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // ctx.fillRect(CV_PAD / 2, CV_PAD / 2, canvas.width - CV_PAD, canvas.height - CV_PAD);
         ctx.save();
-        ctx.translate(CV_PAD, CV_PAD);
+            ctx.translate(CV_PAD, CV_PAD);
+            //draw garbage
+            ctx.fillStyle = GARBAGE_COLOR;
+            let curTop = MINO_SIZE * BOARD_VISIBLE_HEIGHT, curSz;
+            for(let i of state.garbageQueue) {
+                curSz = Math.min(i * MINO_SIZE, curTop);
+                curTop -= curSz;
+                // console.log("garbage", 0, curTop + 2, GARBAGE_SIZE*10, curSz - 2);
+                ctx.fillRect(0, curTop + 3, GARBAGE_SIZE, curSz - 3);
+                if(curTop == 0) {
+                    break;
+                }
+            }
+            ctx.save();
+                ctx.translate(GARBAGE_SIZE, 0);
+                //draw board
+                let pieceId;
+                for(let i = 1; i <= BOARD_VISIBLE_HEIGHT; i++) {
+                    for(let j = 1; j <= BOARD_WIDTH; j++) {
+                        pieceId = (state.board[i] >> (4 * (j - 1))) & 15;
+                        drawMino(ctx, canvas, (j - 1) * MINO_SIZE, (BOARD_VISIBLE_HEIGHT - i) * MINO_SIZE, pieceId);
+                    }
+                }
+                //draw active piece
+                drawPiece(  ctx, 
+                            canvas, 
+                            (state.activePiecePos[1] - 1) * MINO_SIZE, 
+                            (BOARD_VISIBLE_HEIGHT - state.activePiecePos[0] + 1) * MINO_SIZE, 
+                            state.activePiece, 
+                            state.activePieceRot);
+            ctx.restore();
         ctx.restore();
     }
 
     function drawQueue(ctx, canvas, state, timeLeft) {
+        console.log("drawing queue");
         ctx.fillStyle = BOARD_BACKGROUND;
-        ctx.fillRect(CV_PAD / 2, CV_PAD / 2, canvas.width - CV_PAD, canvas.height - CV_PAD);
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // ctx.fillRect(CV_PAD / 2, CV_PAD / 2, canvas.width - CV_PAD, canvas.height - CV_PAD);
         ctx.save();
-        ctx.translate(CV_PAD, CV_PAD);
+            ctx.translate(CV_PAD, CV_PAD);
+            for(let i = 0; i < 5; i++) {
+                drawPiece(ctx, canvas, 0, MINO_SIZE * (3 * (i + 1) + (state.nextQueue[i] == 6 ? -1 : 0)), state.nextQueue[i], (state.nextQueue[i] == 5 ? 2 : 0));
+            }
         ctx.restore();
     }
 
@@ -296,6 +419,7 @@ var dd = (function (exports) {
         // paintPlayer(state.players[1], size, "red");
         drawHold(p1Hc, p1H, state.p1Board, state.p1TimeLeft);
         drawBoard(p1Bc, p1B, state.p1Board, state.p1TimeLeft);
+        // console.log("PLEASE???");
         drawQueue(p1Qc, p1Q, state.p1Board, state.p1TimeLeft);
 
         drawHold(p2Hc, p2H, state.p2Board, state.p2TimeLeft);

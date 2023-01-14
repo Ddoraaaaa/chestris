@@ -135,6 +135,7 @@ function drawGame(state) {
     // paintPlayer(state.players[1], size, "red");
     drawHold(p1Hc, p1H, state.p1Board, state.p1TimeLeft);
     drawBoard(p1Bc, p1B, state.p1Board, state.p1TimeLeft);
+    // console.log("PLEASE???");
     drawQueue(p1Qc, p1Q, state.p1Board, state.p1TimeLeft);
 
     drawHold(p2Hc, p2H, state.p2Board, state.p2TimeLeft);
