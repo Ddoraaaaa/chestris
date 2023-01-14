@@ -186,6 +186,8 @@ export default class gameBoard {
     } 
 
     checkCollision = (pieceId, pos, rot) => {
+        console.log(pieceId, pos, rot);
+        console.log(PIECE_POSITION[pieceId]);
         const xVals = PIECE_POSITION[pieceId][rot].x;
         const yVals = PIECE_POSITION[pieceId][rot].y;
         for(let i = 0; i < 4; i++) {

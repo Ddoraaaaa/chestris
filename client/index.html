@@ -1,69 +1,76 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Chestris</title>
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <meta charset="UTF-8">
+    <title>Chestris</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
 
-  <style>
-  #gameScreen, #playerScores {
-    display: none;
-  }
-  .input-block {
-    width: 100px;
-  }
-  </style>
+    <style>
+    #gameScreen, #playerScores {
+        display: none;
+    }
+    .input-block {
+        width: 100px;
+    }
+    </style>
 </head>
 
 <body style="background-color:#ffffff">
-  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 
-  <section class="vh-100">
-    <div class="container h-100">
+    <section class="vh-100">
+        <div class="container h-100">
 
-      <!-- INITIAL SCREEN -->
-      <div id="initialScreen" class="d-flex align-items-center justify-content-around h-100">
-        <div class="d-inline-block flex-column align-items-center text-center justify-content-center">
-            <h1>Chestris</h1>
-            <button type="submit" class="btn btn-secondary" id="newRoomButton">Create new room</button>
-            <div>Or</div>
-            <div class="form-group">
-              <input width=200px type="text" placeholder="Room code goes here..." id="roomCodeInput"/>
+            <!-- INITIAL SCREEN -->
+            <div id="initialScreen" class="d-flex align-items-center justify-content-around h-100">
+                <div class="d-inline-block flex-column align-items-center text-center justify-content-center">
+                        <h1>Chestris</h1>
+                        <button type="submit" class="btn btn-secondary" id="newRoomButton">Create new room</button>
+                        <div>Or</div>
+                        <div class="form-group">
+                            <input width=200px type="text" placeholder="Room code goes here..." id="roomCodeInput"/>
+                        </div>
+                        <button type="submit" class="btn btn-secondary" id="joinRoomButton">Join with a code</button>
+                </div>
+                <form action="" method="get" class="form-example justify-content-between">
+                    <h2>Controls</h2>
+                    <p>Press any key to change binding. Esc to cancel</p>
+                    <label class="input-block">DAS</label>                 <input class="input-block" name="das" type="number" max="500" min="1" placeholder="170" onkeyup="dd.utils.enforceMinMax(this)"/><br>
+                    <label class="input-block">ARR</label>                 <input class="input-block" name="arr" type="number" max="500" min="1" placeholder="50" onkeyup="dd.utils.enforceMinMax(this)"/><br>
+                    <label class="input-block">Move left</label>     <input class="input-block" name="left" type="text" placeholder="left arrow" onkeydown="dd.keymaps.rgKeyDown(this, event)" onkeyup="dd.keymaps.rgKeyUp(this, event)"/><br>
+                    <label class="input-block">Move right</label>    <input class="input-block" name="right" type="text" placeholder="right arrow" onkeydown="dd.keymaps.rgKeyDown(this, event)" onkeyup="dd.keymaps.rgKeyUp(this, event)"/><br>
+                    <label class="input-block">Soft drop</label>     <input class="input-block" name="sd" type="text" placeholder="down arrow" onkeydown="dd.keymaps.rgKeyDown(this, event)" onkeyup="dd.keymaps.rgKeyUp(this, event)"/><br>
+                    <label class="input-block">Hard drop</label>     <input class="input-block" name="hd" type="text" placeholder="space" onkeydown="dd.keymaps.rgKeyDown(this, event)" onkeyup="dd.keymaps.rgKeyUp(this, event)"/><br>
+                    <label class="input-block">Hold</label>                <input class="input-block" name="hold" type="text" placeholder="C" onkeydown="dd.keymaps.rgKeyDown(this, event)" onkeyup="dd.keymaps.rgKeyUp(this, event)"/><br>
+                    <label class="input-block">Rotate CW</label>     <input class="input-block" name="rcw" type="text" placeholder="up arrow" onkeydown="dd.keymaps.rgKeyDown(this, event)" onkeyup="dd.keymaps.rgKeyUp(this, event)"/><br>
+                    <label class="input-block">Rotate CCW</label>    <input class="input-block" name="rccw" type="text" onkeydown="dd.keymaps.rgKeyDown(this, event)" onkeyup="dd.keymaps.rgKeyUp(this, event)"/><br>
+                    <label class="input-block">Rotate 180</label>    <input class="input-block" name="r180" type="text" onkeydown="dd.keymaps.rgKeyDown(this, event)" onkeyup="dd.keymaps.rgKeyUp(this, event)"/><br>
+                    <button type="button" class="btn btn-secondary d-inline" onclick="dd.keymaps.mapKeys(this.form)">Save</button>
+                    <button type="button" class="btn btn-secondary d-inline" onclick="dd.keymaps.resetKeys()">Reset</button>
+                </form>
             </div>
-            <button type="submit" class="btn btn-secondary" id="joinRoomButton">Join with a code</button>
+
+            <!-- GAME SCREEN -->
+            <div id="gameScreen" class="h-100">
+                <div class="d-flex flex-column align-items-center justify-content-center h-100">
+                    <h1 id="playerScores"></h1>
+                    <div class="d-flex align-items-center justify-content-around">                    
+                        <canvas class="d-inline-block" id="p1HoldCv"></canvas>             
+                        <canvas class="d-inline-block" id="p1BoardCv"></canvas>           
+                        <canvas class="d-inline-block" id="p1QueueCv" style="margin-right: 50px"></canvas>   
+
+                        <canvas class="d-inline-block" id="p2HoldCv"></canvas>             
+                        <canvas class="d-inline-block" id="p2BoardCv"></canvas>           
+                        <canvas class="d-inline-block" id="p2QueueCv"></canvas>
+                    </div>
+                    <h2 id="roomCodeDisplay">Room number: <span id="roomCodeText"></span></h2>
+                    <button class="btn btn-secondary" id="startButton">Start</button>
+                </div>
+            </div>
+
         </div>
-        <form action="" method="get" class="form-example justify-content-between">
-          <h2>Controls</h2>
-          <p>Press any key to change binding. Esc to cancel</p>
-          <label class="input-block">DAS</label>         <input class="input-block" name="das" type="number" max="500" min="1" placeholder="170" onkeyup="dd.utils.enforceMinMax(this)"/><br>
-          <label class="input-block">ARR</label>         <input class="input-block" name="arr" type="number" max="500" min="1" placeholder="50" onkeyup="dd.utils.enforceMinMax(this)"/><br>
-          <label class="input-block">Move left</label>   <input class="input-block" name="left" type="text" placeholder="left arrow" onkeydown="dd.keymaps.rgKeyDown(this, event)" onkeyup="dd.keymaps.rgKeyUp(this, event)"/><br>
-          <label class="input-block">Move right</label>  <input class="input-block" name="right" type="text" placeholder="right arrow" onkeydown="dd.keymaps.rgKeyDown(this, event)" onkeyup="dd.keymaps.rgKeyUp(this, event)"/><br>
-          <label class="input-block">Soft drop</label>   <input class="input-block" name="sd" type="text" placeholder="down arrow" onkeydown="dd.keymaps.rgKeyDown(this, event)" onkeyup="dd.keymaps.rgKeyUp(this, event)"/><br>
-          <label class="input-block">Hard drop</label>   <input class="input-block" name="hd" type="text" placeholder="space" onkeydown="dd.keymaps.rgKeyDown(this, event)" onkeyup="dd.keymaps.rgKeyUp(this, event)"/><br>
-          <label class="input-block">Hold</label>        <input class="input-block" name="hold" type="text" placeholder="C" onkeydown="dd.keymaps.rgKeyDown(this, event)" onkeyup="dd.keymaps.rgKeyUp(this, event)"/><br>
-          <label class="input-block">Rotate CW</label>   <input class="input-block" name="rcw" type="text" placeholder="up arrow" onkeydown="dd.keymaps.rgKeyDown(this, event)" onkeyup="dd.keymaps.rgKeyUp(this, event)"/><br>
-          <label class="input-block">Rotate CCW</label>  <input class="input-block" name="rccw" type="text" onkeydown="dd.keymaps.rgKeyDown(this, event)" onkeyup="dd.keymaps.rgKeyUp(this, event)"/><br>
-          <label class="input-block">Rotate 180</label>  <input class="input-block" name="r180" type="text" onkeydown="dd.keymaps.rgKeyDown(this, event)" onkeyup="dd.keymaps.rgKeyUp(this, event)"/><br>
-          <button type="button" class="btn btn-secondary d-inline" onclick="dd.keymaps.mapKeys(this.form)">Save</button>
-          <button type="button" class="btn btn-secondary d-inline" onclick="dd.keymaps.resetKeys()">Reset</button>
-        </form>
-      </div>
+    </section>
 
-      <!-- GAME SCREEN -->
-      <div id="gameScreen" class="h-100">
-        <div class="d-flex flex-column align-items-center justify-content-center h-100">
-          <h1 id="playerScores"></h1>
-          <canvas id="p1Canvas"></canvas>
-          <canvas id="p2Canvas"></canvas>
-          <h2 id="roomCodeDisplay">Room number: <span id="roomCodeText"></span></h2>
-          <button class="btn btn-secondary" id="startButton">Start</button>
-        </div>
-      </div>
-
-    </div>
-  </section>
-
-  <script src="./dest/bundle.js"></script>
+    <script src="./dest/bundle.js"></script>
 </body>
 </html>

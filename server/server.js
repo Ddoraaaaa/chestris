@@ -83,7 +83,6 @@ io.on('connection', client => {
 function startGameInterval(roomName) {
     const intervalId = setInterval(() => {
         const winner = gameLoop(state[roomName]);
-        copy
 
         if (!winner) {
             updateEmittedState(state[roomName], emittedState[roomName]);

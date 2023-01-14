@@ -8,15 +8,15 @@ export function initGame() {
 export function createGameState() {
     let state = {
         p1Board: new gameBoard(7),
-        p1Timeleft: 60*1000,
+        p1TimeLeft: 60*1000,
         p2Board: new gameBoard(7),
-        p2Timeleft: 60*1000,
+        p2TimeLeft: 60*1000,
     };
     let emittedState = {
         p1Board: {},
-        p1Timeleft: 60*1000,
+        p1TimeLeft: 60*1000,
         p2Board: {},
-        p2Timeleft: 60*1000,
+        p2TimeLeft: 60*1000,
     }
     updateEmittedState(state, emittedState);
     return [state, emittedState];

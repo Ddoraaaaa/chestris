@@ -1,6 +1,7 @@
 import * as constants from "./constants";
 import * as keymaps from "./keymaps";
 import * as utils from "./utils";
+import { drawBoard, drawHold, drawQueue } from "./draw";
 
 export { utils, constants, keymaps };
 
@@ -55,7 +56,10 @@ function startGame() {
     console.log("pressed");
 }
 
-let canvas, ctx;
+let p1H, p1B, p1Q;
+let p1Hc, p1Bc, p1Qc;
+let p2H, p2B, p2Q;
+let p2Hc, p2Bc, p2Qc;
 let playerNumber;
 let gameHandling;
 let gameActive = false;
@@ -70,15 +74,20 @@ function init() {
     utils.hideElement(initialScreen);
     gameScreen.style.display = "block";
 
-    canvas = document.getElementById("canvas");
-    ctx = canvas.getContext("2d");
+    p1H = document.getElementById("p1HoldCv"); p1Hc = p1H.getContext("2d");
+    p1B = document.getElementById("p1BoardCv"); p1Bc = p1B.getContext("2d");
+    p1Q = document.getElementById("p1QueueCv"); p1Qc = p1Q.getContext("2d");
+    p2H = document.getElementById("p2HoldCv"); p2Hc = p2H.getContext("2d");
+    p2B = document.getElementById("p2BoardCv"); p2Bc = p2B.getContext("2d");
+    p2Q = document.getElementById("p2QueueCv"); p2Qc = p2Q.getContext("2d");
 
-    canvas.height=canvas.width=600;
-    // canvas.height = window.innerHeight*0.8;
-    // canvas.width = canvas.height*1.5;
-
-    ctx.fillStyle = constants.BG_COLOUR;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    p1H.width = p2H.width = p1Q.width = p2Q.width 
+                          = 4 * constants.MINO_SIZE + 2 * constants.CV_PAD;
+    p1B.width = p2B.width = constants.BOARD_WIDTH * constants.MINO_SIZE +
+                            constants.GARBAGE_SIZE + 2 * constants.CV_PAD;
+    p1B.height = p2B.height = p1H.height = p2H.height = p1Q.height = p2Q.height
+                            = constants.BOARD_VISIBLE_HEIGHT * constants.MINO_SIZE +
+                              constants.CV_PAD * 2;
 
     document.addEventListener("keydown", keydown);
     document.addEventListener("keyup", keyup);
@@ -110,29 +119,27 @@ function keyup(e) {
     socket.emit("keyup", e.keyCode);
 }
 
-function paintGame(state) {
-    console.log(state)
-    ctx.fillStyle = constants.BG_COLOUR;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+function drawGame(state) {
+    // console.log(state)
+    // ctx1.fillStyle = constants.BG_COLOUR;
+    // ctx1.fillRect(0, 0, canvas.width, canvas.height);
 
-    const food = state.food;
-    const gridsize = state.gridsize;
-    const size = canvas.width / gridsize;
+    // const food = state.food;
+    // const gridsize = state.gridsize;
+    // const size = canvas.width / gridsize;
 
-    ctx.fillStyle = constants.FOOD_COLOUR;
-    ctx.fillRect(food.x * size, food.y * size, size, size);
+    // ctx.fillStyle = constants.FOOD_COLOUR;
+    // ctx.fillRect(food.x * size, food.y * size, size, size);
 
-    paintPlayer(state.players[0], size, constants.SNAKE_COLOUR);
-    paintPlayer(state.players[1], size, "red");
-}
+    // paintPlayer(state.players[0], size, constants.SNAKE_COLOUR);
+    // paintPlayer(state.players[1], size, "red");
+    drawHold(p1Hc, p1H, state.p1Board, state.p1TimeLeft);
+    drawBoard(p1Bc, p1B, state.p1Board, state.p1TimeLeft);
+    drawQueue(p1Qc, p1Q, state.p1Board, state.p1TimeLeft);
 
-function paintPlayer(playerState, size, colour) {
-    const snake = playerState.snake;
-
-    ctx.fillStyle = colour;
-    for (let cell of snake) {
-        ctx.fillRect(cell.x * size, cell.y * size, size, size);
-    }
+    drawHold(p2Hc, p2H, state.p2Board, state.p2TimeLeft);
+    drawBoard(p2Bc, p2B, state.p2Board, state.p2TimeLeft);
+    drawQueue(p2Qc, p2Q, state.p2Board, state.p2TimeLeft);
 }
 
 function handleInit(number, roomCode) {
@@ -145,8 +152,8 @@ function handleGameState(gameState) {
         return;
     }
     gameState = JSON.parse(gameState);
-    // requestAnimationFrame(() => paintGame(gameState));
-    requestAnimationFrame(() => console.log(gameState));
+    requestAnimationFrame(() => drawGame(gameState));
+    // requestAnimationFrame(() => console.log(gameState));
 }
 
 function handleGameOver(data) {

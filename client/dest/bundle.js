@@ -3,6 +3,7 @@ var dd = (function (exports) {
 
     const CTRL_KEYS$1 = ["das", "arr", "right", "left", "sd", "hd", "hold", "rcw", "rccw", "r180"];
     const LMAO = "1";
+
     const DEFAULT_GAME_HANDLING = {
         "das": 170,
         "arr": 50,
@@ -13,55 +14,66 @@ var dd = (function (exports) {
         "hold": 67,
         "rcw": 38
     };
-    const BG_COLOUR= "#202020";
-    const SNAKE_COLOUR = "#c2c2c2";
-    const FOOD_COLOUR = "#e66916";
+
+    const BOARD_BACKGROUND = "#303030";
+    const BOARD_HEIGHT = 40;
+    const BOARD_VISIBLE_HEIGHT = 20;
+    const BOARD_WIDTH = 10;
+    const PREVIEW_QUEUE = 5;
+    const MINO_SIZE = 30;
+    const GARBAGE_SIZE = 4;
+    const CV_PAD = 10;
 
     var constants = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        BG_COLOUR: BG_COLOUR,
+        BOARD_BACKGROUND: BOARD_BACKGROUND,
+        BOARD_HEIGHT: BOARD_HEIGHT,
+        BOARD_VISIBLE_HEIGHT: BOARD_VISIBLE_HEIGHT,
+        BOARD_WIDTH: BOARD_WIDTH,
         CTRL_KEYS: CTRL_KEYS$1,
+        CV_PAD: CV_PAD,
         DEFAULT_GAME_HANDLING: DEFAULT_GAME_HANDLING,
-        FOOD_COLOUR: FOOD_COLOUR,
+        GARBAGE_SIZE: GARBAGE_SIZE,
         LMAO: LMAO,
-        SNAKE_COLOUR: SNAKE_COLOUR
+        MINO_SIZE: MINO_SIZE,
+        PREVIEW_QUEUE: PREVIEW_QUEUE
     });
 
     function hideElement(elem) {
-      elem.classList.remove("d-flex");
-      elem.classList.add("d-none");
+        elem.classList.remove("d-flex");
+        elem.classList.add("d-none");
     }
 
     function getCookie() {
-      var cookie = document.cookie;
-      var res = {};
-      cookie.split(/\s*;\s*/).forEach(function(pair) {
-        pair = pair.split(/\s*=\s*/);
-        res[pair[0]] = pair.splice(1).join('=');
-      });
-      console.log(res);
-      return res;
+        var cookie = document.cookie;
+        var res = {};
+        cookie.split(/\s*;\s*/).forEach(function(pair) {
+            pair = pair.split(/\s*=\s*/);
+            res[pair[0]] = pair.splice(1).join('=');
+        });
+        console.log(res);
+        return res;
     }
 
     function setCookie(key, value, isDelete) {
-      var cookieString = key + "=" + value;
-      if(isDelete) {
-        cookieString += "; expires = Thu, 01 Jan 1970 00:00:00 GMT";
-      }
-      cookieString += "; path=/";
-      console.log(cookieString);
-      document.cookie=cookieString;
+        var cookieString = key + "=" + value;
+        if(isDelete) {
+            cookieString += "; expires = Thu, 01 Jan 1970 00:00:00 GMT";
+        }
+        cookieString += "; path=/";
+        console.log(cookieString);
+        document.cookie=cookieString;
     }
 
     function enforceMinMax(elem) {
-      if (elem.value != "") {
-        if (parseInt(elem.value) < parseInt(elem.min)) {
-          elem.value = elem.min;
+        if (elem.value != "") {
+            if (parseInt(elem.value) < parseInt(elem.min)) {
+                elem.value = elem.min;
+            }
+            if (parseInt(elem.value) > parseInt(elem.max)) {
+                elem.value = elem.max;
+            }
         }
-        if (parseInt(elem.value) > parseInt(elem.max)) {
-          elem.value = elem.max;
-        }
-      }
     }
 
     var utils = /*#__PURE__*/Object.freeze({
@@ -124,8 +136,38 @@ var dd = (function (exports) {
         rgKeyUp: rgKeyUp
     });
 
+    function drawMino(ctx, canvas, x, y, pieceId) {
+
+    }
+
+    function drawHold(ctx, canvas, state, timeLeft) {
+        ctx.fillStyle = BOARD_BACKGROUND;
+        ctx.fillRect(CV_PAD / 2, CV_PAD / 2, canvas.width - CV_PAD, canvas.height - CV_PAD);
+        ctx.save();
+        ctx.translate(CV_PAD, CV_PAD);
+        //ACTUALLY START DRAWING
+        console.log(state, "hello");
+        ctx.restore();
+    }
+
+    function drawBoard(ctx, canvas, state, timeLeft) {
+        ctx.fillStyle = BOARD_BACKGROUND;
+        ctx.fillRect(CV_PAD / 2, CV_PAD / 2, canvas.width - CV_PAD, canvas.height - CV_PAD);
+        ctx.save();
+        ctx.translate(CV_PAD, CV_PAD);
+        ctx.restore();
+    }
+
+    function drawQueue(ctx, canvas, state, timeLeft) {
+        ctx.fillStyle = BOARD_BACKGROUND;
+        ctx.fillRect(CV_PAD / 2, CV_PAD / 2, canvas.width - CV_PAD, canvas.height - CV_PAD);
+        ctx.save();
+        ctx.translate(CV_PAD, CV_PAD);
+        ctx.restore();
+    }
+
     const socket = io("ws://localhost:3000", {
-      transports: ["websocket", "polling", "flashsocket"],
+        transports: ["websocket", "polling", "flashsocket"],
     });
 
     socket.on("init", handleInit);
@@ -158,160 +200,167 @@ var dd = (function (exports) {
     startBtn.addEventListener("click", startGame);
 
     function newRoom() {
-      socket.emit("newRoom");
-      init();
+        socket.emit("newRoom");
+        init();
     }
 
     function joinRoom() {
-      _roomCode = roomCodeInput.value;
-      socket.emit("joinRoom", _roomCode);
-      handleRoomCode(_roomCode);
-      init();
+        _roomCode = roomCodeInput.value;
+        socket.emit("joinRoom", _roomCode);
+        handleRoomCode(_roomCode);
+        init();
     }
 
     function startGame() {
-      console.log("pressed");
-      socket.emit("startGame", _roomCode);
-      console.log("pressed");
+        console.log("pressed");
+        socket.emit("startGame", _roomCode);
+        console.log("pressed");
     }
 
-    let canvas, ctx;
+    let p1H, p1B, p1Q;
+    let p1Hc, p1Bc, p1Qc;
+    let p2H, p2B, p2Q;
+    let p2Hc, p2Bc, p2Qc;
     let playerNumber;
     let gameHandling;
     let gameActive = false;
 
     function init() {
-      gameHandling = DEFAULT_GAME_HANDLING;
-      applyHandling(gameHandling);
+        gameHandling = DEFAULT_GAME_HANDLING;
+        applyHandling(gameHandling);
 
-      console.log(gameHandling, "lmao");
-      console.log("why?");
+        console.log(gameHandling, "lmao");
+        console.log("why?");
 
-      hideElement(initialScreen);
-      gameScreen.style.display = "block";
+        hideElement(initialScreen);
+        gameScreen.style.display = "block";
 
-      canvas = document.getElementById("canvas");
-      ctx = canvas.getContext("2d");
+        p1H = document.getElementById("p1HoldCv"); p1Hc = p1H.getContext("2d");
+        p1B = document.getElementById("p1BoardCv"); p1Bc = p1B.getContext("2d");
+        p1Q = document.getElementById("p1QueueCv"); p1Qc = p1Q.getContext("2d");
+        p2H = document.getElementById("p2HoldCv"); p2Hc = p2H.getContext("2d");
+        p2B = document.getElementById("p2BoardCv"); p2Bc = p2B.getContext("2d");
+        p2Q = document.getElementById("p2QueueCv"); p2Qc = p2Q.getContext("2d");
 
-      canvas.height=canvas.width=600;
-      // canvas.height = window.innerHeight*0.8;
-      // canvas.width = canvas.height*1.5;
+        p1H.width = p2H.width = p1Q.width = p2Q.width 
+                              = 4 * MINO_SIZE + 2 * CV_PAD;
+        p1B.width = p2B.width = BOARD_WIDTH * MINO_SIZE +
+                                GARBAGE_SIZE + 2 * CV_PAD;
+        p1B.height = p2B.height = p1H.height = p2H.height = p1Q.height = p2Q.height
+                                = BOARD_VISIBLE_HEIGHT * MINO_SIZE +
+                                  CV_PAD * 2;
 
-      ctx.fillStyle = BG_COLOUR;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      document.addEventListener("keydown", keydown);
-      document.addEventListener("keyup", keyup);
+        document.addEventListener("keydown", keydown);
+        document.addEventListener("keyup", keyup);
     }
 
     function handleInitGame() {
-      console.log("lmao");
-      roomCodeDisplay.style.display = "none";
-      startBtn.style.display = "none";
+        console.log("lmao");
+        roomCodeDisplay.style.display = "none";
+        startBtn.style.display = "none";
 
-      handleScoreUpdate();
+        handleScoreUpdate();
 
-      gameActive = true;
+        gameActive = true;
     }
 
     function keydown(e) {
-      console.log(e.keyCode);
-      if (!gameActive) {
-        return;
-      }
-      socket.emit("keydown", e.keyCode);
+        console.log(e.keyCode);
+        if (!gameActive) {
+            return;
+        }
+        socket.emit("keydown", e.keyCode);
     }
 
     function keyup(e) {
-      console.log(e.keyCode);
-      if (!gameActive) {
-        return;
-      }
-      socket.emit("keyup", e.keyCode);
+        console.log(e.keyCode);
+        if (!gameActive) {
+            return;
+        }
+        socket.emit("keyup", e.keyCode);
     }
 
-    function paintGame(state) {
-      console.log(state);
-      ctx.fillStyle = BG_COLOUR;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    function drawGame(state) {
+        // console.log(state)
+        // ctx1.fillStyle = constants.BG_COLOUR;
+        // ctx1.fillRect(0, 0, canvas.width, canvas.height);
 
-      const food = state.food;
-      const gridsize = state.gridsize;
-      const size = canvas.width / gridsize;
+        // const food = state.food;
+        // const gridsize = state.gridsize;
+        // const size = canvas.width / gridsize;
 
-      ctx.fillStyle = FOOD_COLOUR;
-      ctx.fillRect(food.x * size, food.y * size, size, size);
+        // ctx.fillStyle = constants.FOOD_COLOUR;
+        // ctx.fillRect(food.x * size, food.y * size, size, size);
 
-      paintPlayer(state.players[0], size, SNAKE_COLOUR);
-      paintPlayer(state.players[1], size, "red");
-    }
+        // paintPlayer(state.players[0], size, constants.SNAKE_COLOUR);
+        // paintPlayer(state.players[1], size, "red");
+        drawHold(p1Hc, p1H, state.p1Board, state.p1TimeLeft);
+        drawBoard(p1Bc, p1B, state.p1Board, state.p1TimeLeft);
+        drawQueue(p1Qc, p1Q, state.p1Board, state.p1TimeLeft);
 
-    function paintPlayer(playerState, size, colour) {
-      const snake = playerState.snake;
-
-      ctx.fillStyle = colour;
-      for (let cell of snake) {
-        ctx.fillRect(cell.x * size, cell.y * size, size, size);
-      }
+        drawHold(p2Hc, p2H, state.p2Board, state.p2TimeLeft);
+        drawBoard(p2Bc, p2B, state.p2Board, state.p2TimeLeft);
+        drawQueue(p2Qc, p2Q, state.p2Board, state.p2TimeLeft);
     }
 
     function handleInit(number, roomCode) {
-      playerNumber = number;
-      _roomCode = roomCode;
+        playerNumber = number;
+        _roomCode = roomCode;
     }
 
     function handleGameState(gameState) {
-      if (!gameActive) {
-        return;
-      }
-      gameState = JSON.parse(gameState);
-      requestAnimationFrame(() => paintGame(gameState));
+        if (!gameActive) {
+            return;
+        }
+        gameState = JSON.parse(gameState);
+        requestAnimationFrame(() => drawGame(gameState));
+        // requestAnimationFrame(() => console.log(gameState));
     }
 
     function handleGameOver(data) {
-      if (!gameActive) {
-        return;
-      }
-      data = JSON.parse(data);
+        if (!gameActive) {
+            return;
+        }
+        data = JSON.parse(data);
 
-      gameActive = false;
+        gameActive = false;
 
-      if (data.winner === playerNumber) {
-        myScore++;
-        alert("You Win!");
-      } else {
-        theirScore++;
-        alert("You Lose :(");
-      }
+        if (data.winner === playerNumber) {
+            myScore++;
+            alert("You Win!");
+        } else {
+            theirScore++;
+            alert("You Lose :(");
+        }
 
-      handleScoreUpdate();
-      startBtn.style.display = "block";
+        handleScoreUpdate();
+        startBtn.style.display = "block";
     }
 
     function handleScoreUpdate() {
-      playerScores.style.display = "block";
-      playerScores.innerText=`${myScore} - ${theirScore}`;
+        playerScores.style.display = "block";
+        playerScores.innerText=`${myScore} - ${theirScore}`;
     }
 
     function handleRoomCode(roomCode) {
-      roomCodeText.innerText = roomCode;
+        roomCodeText.innerText = roomCode;
     }
 
     function handleUnknownCode() {
-      reset();
-      alert("Unknown Room");
+        reset();
+        alert("Unknown Room");
     }
 
     function handleTooManyPlayers() {
-      reset();
-      alert("Room already full");
+        reset();
+        alert("Room already full");
     }
 
     function reset() {
-      playerNumber = null;
-      roomCodeInput.value = "";
-      initialScreen.style.display = "block";
-      gameScreen.style.display = "none";
+        playerNumber = null;
+        roomCodeInput.value = "";
+        initialScreen.style.display = "block";
+        gameScreen.style.display = "none";
     }
 
     exports.constants = constants;

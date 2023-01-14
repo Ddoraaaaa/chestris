@@ -6,7 +6,7 @@ const GRID_SIZE = 20;
 const CODE_LENGTH = 6;
 
 // +++++++++++++++++++++ BOARD INFORMATION +++++++++++++++++++++++++++++++++++
-const BOARD_BACKGROUND = "#303030";
+const BOARD_BACKGROUND = "#FFFFFF";
 const BOARD_HEIGHT = 40;
 const BOARD_VISIBLE_HEIGHT = 20;
 const BOARD_WIDTH = 10;
@@ -26,7 +26,7 @@ const PIECE_COLOR = [   BOARD_BACKGROUND,  //none
 
 //(0, 0) being lower left position. (x, y) means x rows up and y cols right
 const PIECE_POSITION = [
-    []                                        //                     No piece
+    [],                                       //                     No piece
     [
         { x: [1, 1, 1, 2], y: [0, 1, 2, 2] }, // ..# .#. ... ##.     L piece
         { x: [0, 1, 2, 0], y: [1, 1, 1, 2] }, // ### .#. ### .#.
