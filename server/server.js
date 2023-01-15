@@ -103,8 +103,10 @@ io.on("connection", client => {
 });
 
 function startGameInterval(roomName) {
-    if(!state[roomName]) state[roomName] = {};
     gameInterval[roomName] = setInterval(() => {
+        if(!state[roomName] || !playerTurn[roomName]) {
+            return;
+        }
         let winner = 0;
         state[roomName].playerTime[playerTurn[roomName] - 1] = Math.max(
             state[roomName].playerTime[playerTurn[roomName] - 1] - 1000 / FRAME_RATE,
