@@ -1,10 +1,13 @@
 Multiplayer Guideline Tet*** game with chess rules!
 
-Fully conforms with the guideline published by The Tet*** Company, including: 
+Fully conforms with the guideline published by The Tet*** Company and any other chess games, including: 
 
 - Piece colors
 - Super rotation system
 - Wall kicks
+- Chess timer (x/+y)
+
+Enable cookies to customize keymaps.
 
 What's different?
 
