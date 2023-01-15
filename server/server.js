@@ -103,6 +103,7 @@ io.on("connection", client => {
 });
 
 function startGameInterval(roomName) {
+    if(!state[roomName]) state[roomName] = {};
     gameInterval[roomName] = setInterval(() => {
         let winner = 0;
         state[roomName].playerTime[playerTurn[roomName] - 1] = Math.max(
