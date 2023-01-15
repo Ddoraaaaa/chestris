@@ -1,7 +1,7 @@
 import deepFreeze from "deep-freeze";
 
 // +++++++++++++++++++++ SERVER INFORMATION ++++++++++++++++++++++++++++++++++
-const FRAME_RATE = 60;
+const FRAME_RATE = 10;
 const GRID_SIZE = 20;
 const CODE_LENGTH = 6;
 

@@ -1009,11 +1009,16 @@ var dd = (function (exports) {
 
     //++++++++++++++ GAME INTERVAL +++++++++++++++++++++++++++++++++++++++++++++++
 
+    var framePos = 0;
+
     function startGameInterval() {
         gameInterval = setInterval(() => {
+            framePos = (framePos + 1) % 6;
             // console.log("intervin'");
             continueInput();
-            socket.emit("refreshBoard", JSON.stringify(p1BoardSimple));
+            if(framePos == 1) {
+                socket.emit("refreshBoard", JSON.stringify(p1BoardSimple));
+            }
             requestAnimationFrame(() => drawGame());
         }, 1000 / FRAME_RATE$1);
     }
