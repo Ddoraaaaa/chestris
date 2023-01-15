@@ -858,7 +858,7 @@ var dd = (function (exports) {
     }
 
     const socket = io(
-                        "http://localhost:3000" || 
+                        // "http://localhost:3000" || 
                         "https://chestris.herokuapp.com/", {
         transports: ["websocket", "polling", "flashsocket"],
     });
