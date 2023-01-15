@@ -72,6 +72,7 @@ const controlState = {
     downCnt: 0,
     downTime: null,
 }
+const keyIsDown = Array(200).fill(0);
 
 function init() {
     // console.log("why?")
@@ -112,12 +113,19 @@ function keydown(e) {
     if (!gameActive) {
         return;
     }
+    if(keyIsDown[e.keyCode]) {
+        return;
+    }
+    keyIsDown[e.keyCode] = true;
     let keyCode =  Object.keys(playerControls.controls).find(key => playerControls.controls[key] === e.keyCode);
+    // console.log(keyCode);
     switch(keyCode) {
         case "hd":
             socket.emit("addAction", ["hd", 0])
+            break;
         case "sd":
-            controlState.downCnt = 1;
+            socket.emit("addAction", ["sd", 1]);
+            controlState.downCnt = 0;
             controlState.downTime = Number(Date.now());
             break;
         case "rcw":
@@ -133,20 +141,26 @@ function keydown(e) {
             socket.emit("addAction", ["hold", 0])
             break;
         case "left":
+            socket.emit("addAction", ["left", 1]);
             controlState.dasDir = "left";
-            controlState.dasCnt = 1;
+            controlState.dasCnt = 0;
             controlState.dasTime = Number(Date.now()) + playerControls.handling.das;
+            break;
         case "right":
+            socket.emit("addAction", ["right", 1]);
             controlState.dasDir = "right";
-            controlState.dasCnt = 1;
+            controlState.dasCnt = 0;
             controlState.dasTime = Number(Date.now()) + playerControls.handling.das;
+            break;
     }
+    // console.log(controlState, "this happened");
 }
 
 function keyup(e) {
     if (!gameActive) {
         return;
     }
+    keyIsDown[e.keyCode] = false;
     let keyCode =  Object.keys(playerControls.controls).find(key => playerControls.controls[key] === e.keyCode);    
     switch(keyCode) {
         case "sd":
@@ -181,20 +195,22 @@ function drawGame(state) {
 function handleInit(number, roomCode) {
     playerNumber = number;
     _roomCode = roomCode;
-    // updateKeys
+    keymaps.updateKeys(playerControls);
 }
 
 function handleGameState(gameState) {
     if (!gameActive) {
         return;
     }
+    // console.log(1, controlState);
     //horizontal movement
     let curTime = Number(Date.now()), timesDid;
-    if(controlState.dasDir != "N") {
+    if(controlState.dasDir != "N" && controlState.dasTime < curTime) {
         timesDid = Math.floor((curTime - controlState.dasTime) / playerControls.handling.arr);
         controlState.dasCnt+= timesDid;
         controlState.dasTime += timesDid * playerControls.handling.arr;
     }
+    // console.log(2, controlState);
     if(controlState.dasCnt) {
         socket.emit("addAction", [controlState.dasDir, controlState.dasCnt]);
         controlState.dasCnt = 0;
@@ -206,6 +222,7 @@ function handleGameState(gameState) {
         controlState.downCnt+= timesDid;
         controlState.downTime += timesDid * playerControls.handling.grav;
     }
+    // console.log(3, controlState);
     if(controlState.downCnt) {
         socket.emit("addAction", ["sd", controlState.downCnt]);
         controlState.downCnt = 0;

@@ -29,14 +29,20 @@ export function updateEmittedState(state, emittedState) {
     emittedState.p2Timeleft = state.p2Timeleft;
 }
 
-export function gameLoop(state) {
+export function gameLoop(state, frameLen, curPlayer) {
     if (!state) {
         return;
     }
-    if(state.p1Timeleft == 0 || state.p1Board.gameOver) {
+    if(curPlayer == 1) {
+        state.p1TimeLeft -= frameLen;
+    }
+    if(curPlayer == 2) {
+        state.p2TimeLeft -= frameLen;
+    }
+    if(state.p1Timeleft <= 0 || state.p1Board.gameOver) {
         return 2;
     }
-    if(state.p2Timeleft == 0 || state.p2Board.gameOver) {
+    if(state.p2Timeleft <= 0 || state.p2Board.gameOver) {
         return 1;
     }
     return false;

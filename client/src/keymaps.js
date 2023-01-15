@@ -1,8 +1,22 @@
 import * as utils from "./utils";
 import * as constants from "./constants";
 
-export function updateKeys() {
-    return;
+export function updateKeys(playerControls) {
+    const savedControls = utils.getCookie();
+    console.log(savedControls, 69);
+    for (const [x, y] of Object.entries(savedControls)) {
+        switch(x) {
+            case "das":
+            case "arr":
+            case "grav":
+                playerControls.handling[x] = Number(y);
+                // console.log(x, "is handling");
+                break;
+            default:
+                playerControls.controls[x] = Number(y);
+                // console.log(x, "is not handling");
+        }
+    }
 }
 
 export function rgKeyDown(elem, event) {
@@ -43,7 +57,7 @@ export function mapKeys(frm) {
 }
 
 export function resetKeys() {
-    for(var key of CTRL_KEYS) {
+    for(var key of constants.CTRL_KEYS) {
         utils.setCookie(key, 1234, 1);
     }
 }

@@ -19,6 +19,8 @@ export default class gameBoard {
         //game rules
         this.gameOver = false;
         this._bagSize = bagSize;
+        this.backToBack = 0;
+        this.comboCount = 0;
 
         this.fillNextQueue();
         this.spawnPiece();
@@ -170,7 +172,7 @@ export default class gameBoard {
         if(this.activePiece == 7) {
             this.isTSpin = 0;
             for(let [addX, addY] of TSPIN_CHECK) {
-                console.log("wtf help", addX, addY, this.activePiecePos);
+                // console.log("wtf help", addX, addY, this.activePiecePos);
                 if(this.checkPos(this.activePiecePos[0] + addX, this.activePiecePos[1] + addY)) {
                     this.isTSpin++;
                 }
@@ -224,7 +226,7 @@ export default class gameBoard {
     }
 
     checkPos = (i, j) => {
-        console.log(i, j);
+        // console.log(i, j);
         if(i < 1 || j < 1 || i > BOARD_HEIGHT || j > BOARD_WIDTH) return true;
         return (this.boardMask[i] >> (j - 1)) & 1;
     }
@@ -262,29 +264,29 @@ export default class gameBoard {
 
     //get the amount of damage dealt
     calculateDamage = (clearedLine) => {
-        console.log("debugging cleared line", clearedLine);
+        // console.log("debugging cleared line", clearedLine);
         let res = 0;
         if(!clearedLine) {
             this.comboCount = 0;
             if(this.isTSpin) {
                 this.backToBack++;
             }
-            else {
-                this.backToBack = 0;
-            }
             return res;
         }
         this.comboCount++;
         //damage for spins
-        if(this.lastMove) {
+        if(clearedLine == 4) {
+            this.backToBack++;
+        }
+        else if(this.lastMove) {
             if(this.isTSpin) {
                 this.backToBack++;
-                console.log("has t spin");
+                // console.log("has t spin");
                 res += TSPIN_DMG[clearedLine];
             }
             else if(this.pieceId <= 4 && clearedLine == 3) {
                 this.backToBack++;
-                console.log("has spin");
+                // console.log("has spin");
                 res += TSPIN_DMG[clearedLine];
             }
             else {
@@ -294,10 +296,10 @@ export default class gameBoard {
         else {
             this.backToBack = 0;
         }
-        console.log("before combo", res);
+        // console.log("before combo", res);
         //damage for cleared lines or combo
         res += LINE_DMG[clearedLine] + COMBO_DMG[this.comboCount];
-        console.log("after combo", res);
+        // console.log("after combo", res);
 
         //damage for back to back
         for(let i of B2B_DMG) {
@@ -312,10 +314,10 @@ export default class gameBoard {
         //damage for perfect clear
         
         if(this.boardMask[1] == 0) {
-            console.log("has pc");
+            // console.log("has pc");
             res += PC_DMG;
         }
-        console.log("finished. I have no fucking idea what is happening");
+        // console.log("finished. I have no fucking idea what is happening");
         return res;
     }
 
@@ -398,5 +400,7 @@ export default class gameBoard {
         res.activePiece = this.activePiece;
         res.activePiecePos = this.activePiecePos;
         res.activePieceRot = this.activePieceRot;
+        res.backToBack = this.backToBack;
+        res.comboCount = this.comboCount;
     }
 }

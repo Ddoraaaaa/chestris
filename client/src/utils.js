@@ -10,7 +10,7 @@ export function getCookie() {
         pair = pair.split(/\s*=\s*/);
         res[pair[0]] = pair.splice(1).join('=');
     });
-    console.log(res);
+    // console.log(res);
     return res;
 }
 

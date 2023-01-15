@@ -36,6 +36,18 @@ export function drawHold(ctx, canvas, state, timeLeft) {
         drawPiece(ctx, canvas, 0, MINO_SIZE * (3 + (state.heldPiece == 6 ? -1 : 0)), state.heldPiece, (state.heldPiece == 5 ? 2 : 0));
         // console.log(state, "hello");
     ctx.restore();
+    ctx.save();
+        ctx.translate(0, MINO_SIZE * 5);
+        ctx.fillStyle = "white";
+        ctx.font = "24px Courier";
+        if(state.backToBack > 1) {
+            ctx.fillText(`B2B ${state.backToBack - 1}`, 10, 0);
+        }
+        ctx.translate(0, 30);
+        if(state.comboCount > 1) {
+            ctx.fillText(`combo ${state.comboCount}`, 10, 0);
+        }
+    ctx.restore();
 }
 
 export function drawBoard(ctx, canvas, state, timeLeft) {

@@ -1,4 +1,4 @@
-export const CTRL_KEYS = ["das", "arr", "right", "left", "sd", "hd", "hold", "rcw", "rccw", "r180"];
+export const CTRL_KEYS = ["das", "arr", "grav", "right", "left", "sd", "hd", "hold", "rcw", "rccw", "r180"];
 export const LMAO = "1";
 
 export const DEFAULT_CONTROLS = {

@@ -6,6 +6,7 @@ import { makeId } from "./src/utils.js";
 const state = {};
 const emittedState = {};
 const clientRooms = {};
+const playerTurn = {}
 
 const io = new Server()
 
@@ -63,6 +64,7 @@ io.on('connection', client => {
     function handleStartGame(roomName) {
         // console.log("reached here");
         [state[roomName], emittedState[roomName]] = initGame();
+        playerTurn[roomName] = Math.floor(Math.random()*2)+1;
         // console.log("hi", state[roomName]);
         
         startGameInterval(roomName);
@@ -72,12 +74,16 @@ io.on('connection', client => {
 
     function handleAction(actions) {
         const roomName = clientRooms[client.id];
+        if(client.number != playerTurn[roomName]) {
+            return;
+        }
         let thisPlayer = state[roomName].p1Board;
         let otherPlayer = state[roomName].p2Board;
         if(client.number == 2) {
             [thisPlayer, otherPlayer] = [otherPlayer, thisPlayer];
         }
-        let [keyCode, timesDid] = actions
+        let [keyCode, timesDid] = actions;
+        // console.log(actions);
         // let [keyCode, keyCode2] = keyCode1;
         // console.log("hey", keyCode1);
         switch(keyCode) {
@@ -110,7 +116,7 @@ io.on('connection', client => {
 
 function startGameInterval(roomName) {
     const intervalId = setInterval(() => {
-        const winner = gameLoop(state[roomName]);
+        const winner = gameLoop(state[roomName], 1000 / FRAME_RATE, playerTurn[roomName]);
 
         if (!winner) {
             updateEmittedState(state[roomName], emittedState[roomName]);

@@ -1,7 +1,7 @@
 var dd = (function (exports) {
     'use strict';
 
-    const CTRL_KEYS$1 = ["das", "arr", "right", "left", "sd", "hd", "hold", "rcw", "rccw", "r180"];
+    const CTRL_KEYS = ["das", "arr", "grav", "right", "left", "sd", "hd", "hold", "rcw", "rccw", "r180"];
     const LMAO = "1";
 
     const DEFAULT_CONTROLS = {
@@ -97,7 +97,7 @@ var dd = (function (exports) {
         BOARD_HEIGHT: BOARD_HEIGHT,
         BOARD_VISIBLE_HEIGHT: BOARD_VISIBLE_HEIGHT,
         BOARD_WIDTH: BOARD_WIDTH,
-        CTRL_KEYS: CTRL_KEYS$1,
+        CTRL_KEYS: CTRL_KEYS,
         CV_PAD: CV_PAD,
         DEFAULT_CONTROLS: DEFAULT_CONTROLS,
         GARBAGE_COLOR: GARBAGE_COLOR,
@@ -121,7 +121,7 @@ var dd = (function (exports) {
             pair = pair.split(/\s*=\s*/);
             res[pair[0]] = pair.splice(1).join('=');
         });
-        console.log(res);
+        // console.log(res);
         return res;
     }
 
@@ -154,8 +154,22 @@ var dd = (function (exports) {
         setCookie: setCookie
     });
 
-    function updateKeys() {
-        return;
+    function updateKeys(playerControls) {
+        const savedControls = getCookie();
+        console.log(savedControls, 69);
+        for (const [x, y] of Object.entries(savedControls)) {
+            switch(x) {
+                case "das":
+                case "arr":
+                case "grav":
+                    playerControls.handling[x] = Number(y);
+                    // console.log(x, "is handling");
+                    break;
+                default:
+                    playerControls.controls[x] = Number(y);
+                    // console.log(x, "is not handling");
+            }
+        }
     }
 
     function rgKeyDown(elem, event) {
@@ -173,7 +187,7 @@ var dd = (function (exports) {
 
     function applyHandling(gameHandling) {
         var cookieObj = getCookie();
-        for(let key of CTRL_KEYS$1) {
+        for(let key of CTRL_KEYS) {
             if(cookieObj[key]) {
                 gameHandling[key] = Number(cookieObj[key]);
             }
@@ -246,6 +260,18 @@ var dd = (function (exports) {
             ctx.translate(CV_PAD, CV_PAD);
             drawPiece(ctx, canvas, 0, MINO_SIZE * (3 + (state.heldPiece == 6 ? -1 : 0)), state.heldPiece, (state.heldPiece == 5 ? 2 : 0));
             // console.log(state, "hello");
+        ctx.restore();
+        ctx.save();
+            ctx.translate(0, MINO_SIZE * 5);
+            ctx.fillStyle = "white";
+            ctx.font = "24px Courier";
+            if(state.backToBack > 1) {
+                ctx.fillText(`B2B ${state.backToBack - 1}`, 10, 0);
+            }
+            ctx.translate(0, 30);
+            if(state.comboCount > 1) {
+                ctx.fillText(`combo ${state.comboCount - 1}`, 10, 0);
+            }
         ctx.restore();
     }
 
@@ -369,6 +395,7 @@ var dd = (function (exports) {
         downCnt: 0,
         downTime: null,
     };
+    const keyIsDown = Array(200).fill(0);
 
     function init() {
         // console.log("why?")
@@ -409,12 +436,19 @@ var dd = (function (exports) {
         if (!gameActive) {
             return;
         }
+        if(keyIsDown[e.keyCode]) {
+            return;
+        }
+        keyIsDown[e.keyCode] = true;
         let keyCode =  Object.keys(playerControls.controls).find(key => playerControls.controls[key] === e.keyCode);
+        // console.log(keyCode);
         switch(keyCode) {
             case "hd":
                 socket.emit("addAction", ["hd", 0]);
+                break;
             case "sd":
-                controlState.downCnt = 1;
+                socket.emit("addAction", ["sd", 1]);
+                controlState.downCnt = 0;
                 controlState.downTime = Number(Date.now());
                 break;
             case "rcw":
@@ -430,20 +464,26 @@ var dd = (function (exports) {
                 socket.emit("addAction", ["hold", 0]);
                 break;
             case "left":
+                socket.emit("addAction", ["left", 1]);
                 controlState.dasDir = "left";
-                controlState.dasCnt = 1;
+                controlState.dasCnt = 0;
                 controlState.dasTime = Number(Date.now()) + playerControls.handling.das;
+                break;
             case "right":
+                socket.emit("addAction", ["right", 1]);
                 controlState.dasDir = "right";
-                controlState.dasCnt = 1;
+                controlState.dasCnt = 0;
                 controlState.dasTime = Number(Date.now()) + playerControls.handling.das;
+                break;
         }
+        // console.log(controlState, "this happened");
     }
 
     function keyup(e) {
         if (!gameActive) {
             return;
         }
+        keyIsDown[e.keyCode] = false;
         let keyCode =  Object.keys(playerControls.controls).find(key => playerControls.controls[key] === e.keyCode);    
         switch(keyCode) {
             case "sd":
@@ -478,20 +518,22 @@ var dd = (function (exports) {
     function handleInit(number, roomCode) {
         playerNumber = number;
         _roomCode = roomCode;
-        // updateKeys
+        updateKeys(playerControls);
     }
 
     function handleGameState(gameState) {
         if (!gameActive) {
             return;
         }
+        // console.log(1, controlState);
         //horizontal movement
         let curTime = Number(Date.now()), timesDid;
-        if(controlState.dasDir != "N") {
+        if(controlState.dasDir != "N" && controlState.dasTime < curTime) {
             timesDid = Math.floor((curTime - controlState.dasTime) / playerControls.handling.arr);
             controlState.dasCnt+= timesDid;
             controlState.dasTime += timesDid * playerControls.handling.arr;
         }
+        // console.log(2, controlState);
         if(controlState.dasCnt) {
             socket.emit("addAction", [controlState.dasDir, controlState.dasCnt]);
             controlState.dasCnt = 0;
@@ -503,6 +545,7 @@ var dd = (function (exports) {
             controlState.downCnt+= timesDid;
             controlState.downTime += timesDid * playerControls.handling.grav;
         }
+        // console.log(3, controlState);
         if(controlState.downCnt) {
             socket.emit("addAction", ["sd", controlState.downCnt]);
             controlState.downCnt = 0;
