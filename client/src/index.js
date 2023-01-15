@@ -126,7 +126,7 @@ function handleInitGame() {
     
     //init game
     playerBoard = new gameBoard(7);
-
+    
     gameActive = true;
 }
 
