@@ -1,4 +1,4 @@
-import { B2B_DMG, BOARD_HEIGHT, BOARD_WIDTH, COMBO_DMG, LINE_DMG, PC_DMG, PIECE_POSITION, PIECE_SPAWN, PREVIEW_QUEUE, ROTATION_OFFSET, TSPIN_CHECK, TSPIN_DMG } from "../constants.js";
+import { B2B_DMG, BOARD_HEIGHT, BOARD_WIDTH, COMBO_DMG, LINE_DMG, PC_DMG, PIECE_POSITION, PIECE_SPAWN, PREVIEW_QUEUE, ROTATION_OFFSET, TSPIN_CHECK, TSPIN_DMG } from "./constants";
 
 export default class gameBoard {
     // 0:none 1:L 2:J 3:S 4:Z 5:I 6:O 7:T 8:garbage
@@ -382,7 +382,7 @@ export default class gameBoard {
     //resize the board after a modification
     resizeBoard = () => {
         while(this.board.length <= BOARD_HEIGHT) {
-            this.board.push(0);
+            this.board.push("0000000000");
             this.boardMask.push(0);
         }
         while(this.board.length > BOARD_HEIGHT + 1) {

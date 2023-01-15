@@ -335,7 +335,9 @@ var dd = (function (exports) {
         ctx.restore();
     }
 
-    const socket = io("https://chestris.herokuapp.com/", {
+    const socket = io(
+                        "http://localhost:3000" || 
+                        "https://chestris.herokuapp.com/", {
         transports: ["websocket", "polling", "flashsocket"],
     });
 
