@@ -33,5 +33,8 @@ yarn run dev
 Boilerplate by HTC
 
 What's next?
-- Decentralize from server to enchance performance
-- More features
+- ~~Decentralize from server to enchance performance~~ already done!
+- Visual food
+- Audio food
+- Animations
+- Uhh accounts
