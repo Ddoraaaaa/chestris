@@ -1,4 +1,5 @@
 import { Server } from "socket.io";
+import { createServer } from "http";
 import { initGame, gameLoop, updateEmittedState } from "./src/game/game.js";
 import { FRAME_RATE, CODE_LENGTH } from "./src/constants.js";
 import { makeId } from "./src/utils.js";
@@ -8,7 +9,8 @@ const emittedState = {};
 const clientRooms = {};
 const playerTurn = {}
 
-const io = new Server()
+const httpServer = createServer();
+const io = new Server(httpServer, { /* options */ });
 
 io.on('connection', client => {
 
@@ -65,6 +67,7 @@ io.on('connection', client => {
         // console.log("reached here");
         [state[roomName], emittedState[roomName]] = initGame();
         playerTurn[roomName] = Math.floor(Math.random()*2)+1;
+        console.log(playerTurn[roomName]);
         // console.log("hi", state[roomName]);
         
         startGameInterval(roomName);
@@ -93,6 +96,7 @@ io.on('connection', client => {
                 if(damageDealt) {
                     otherPlayer.gotSentGarbage(damageDealt);
                 }
+                playerTurn[roomName] = 3 - playerTurn[roomName];
                 break;
             case "sd":
                 thisPlayer.softDrop(timesDid);
@@ -117,7 +121,7 @@ io.on('connection', client => {
 function startGameInterval(roomName) {
     const intervalId = setInterval(() => {
         const winner = gameLoop(state[roomName], 1000 / FRAME_RATE, playerTurn[roomName]);
-
+        console.log(state[roomName]);
         if (!winner) {
             updateEmittedState(state[roomName], emittedState[roomName]);
             emitGameState(roomName, emittedState[roomName])
@@ -141,4 +145,4 @@ function emitGameOver(room, winner) {
         .emit('gameOver', JSON.stringify({ winner }));
 }
 
-io.listen(3000);
+httpServer.listen(3000, "127.0.0.1");

@@ -50,7 +50,7 @@ export function drawHold(ctx, canvas, state, timeLeft) {
         ctx.translate(0, 30);
         let minutes = Math.floor(timeLeft / 1000 / 60);
         let seconds = Math.floor(timeLeft / 1000) % 60;
-        ctx.fillText(`${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`);
+        ctx.fillText(`${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`, 10, 0);
     ctx.restore();
 }
 

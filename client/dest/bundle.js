@@ -270,8 +270,12 @@ var dd = (function (exports) {
             }
             ctx.translate(0, 30);
             if(state.comboCount > 1) {
-                ctx.fillText(`combo ${state.comboCount - 1}`, 10, 0);
+                ctx.fillText(`combo ${state.comboCount}`, 10, 0);
             }
+            ctx.translate(0, 30);
+            let minutes = Math.floor(timeLeft / 1000 / 60);
+            let seconds = Math.floor(timeLeft / 1000) % 60;
+            ctx.fillText(`${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`, 10, 0);
         ctx.restore();
     }
 
@@ -328,7 +332,7 @@ var dd = (function (exports) {
         ctx.restore();
     }
 
-    const socket = io("ws://localhost:3000", {
+    const socket = io("http://113.22.181.47:3000", {
         transports: ["websocket", "polling", "flashsocket"],
     });
 
