@@ -90,7 +90,9 @@ export default class gameBoard {
         damage = this.cancelGarbage(damage);
         this.lastMove = 0;
         this.isTSpin = 0;
-        this.addGarbage();
+        if(clearedLine == 0) {
+            this.addGarbage();
+        }
         this.spawnPiece();
         return damage;
     }
