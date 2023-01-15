@@ -11,7 +11,7 @@ What's different?
 - LARGEly buffed attack table
 - Garbage comes block by block
 
-Playable demo at: https://chestris.netlify.app.netlify.app/
+Playable demo at: https://chestris.netlify.app
 
 Usage:
 
