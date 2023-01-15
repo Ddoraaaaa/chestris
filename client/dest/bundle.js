@@ -335,7 +335,7 @@ var dd = (function (exports) {
         ctx.restore();
     }
 
-    const socket = io("http://127.0.0.1:3000", {
+    const socket = io("https://gentle-hamlet-31206.herokuapp.com/", {
         transports: ["websocket", "polling", "flashsocket"],
     });
 
