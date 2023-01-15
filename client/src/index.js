@@ -5,7 +5,7 @@ import { drawBoard, drawHold, drawQueue } from "./draw";
 
 export { utils, constants, keymaps };
 
-const socket = io("https://gentle-hamlet-31206.herokuapp.com/", {
+const socket = io("https://chestris.herokuapp.com/", {
     transports: ["websocket", "polling", "flashsocket"],
 });
 
