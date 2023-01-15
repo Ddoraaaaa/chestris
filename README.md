@@ -6,6 +6,11 @@ Fully conforms with the guideline published by The Tet*** Company, including:
 - Super rotation system
 - Wall kicks
 
+What's different?
+
+- LARGEly buffed attack table
+- Garbage comes block by block
+
 Playable demo at: https://bespoke-sawine-c487ac.netlify.app/
 
 Usage:
@@ -23,3 +28,7 @@ yarn run dev
 ```
 
 Boilerplate by HTC
+
+What's next?
+- Decentralize from server to enchance performance
+- More features
