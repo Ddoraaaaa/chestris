@@ -2,10 +2,13 @@ import * as constants from "./constants";
 import * as keymaps from "./keymaps";
 import * as utils from "./utils";
 import { drawBoard, drawHold, drawQueue } from "./draw";
+import gameBoard from "./game/board";
 
 export { utils, constants, keymaps };
 
-const socket = io("https://chestris.herokuapp.com/", {
+const socket = io(
+                    "http://localhost:3000" || 
+                    "https://chestris.herokuapp.com/", {
     transports: ["websocket", "polling", "flashsocket"],
 });
 
@@ -63,6 +66,11 @@ let p2Hc, p2Bc, p2Qc;
 let playerNumber;
 let gameActive = false;
 
+let intervalId;
+let p1Board, p2Board, times;
+
+// +++++++++++++++++ CONTROLS ++++++++++++++++++++++++++++++++++++++++++++++++
+
 const playerControls = JSON.parse(JSON.stringify(constants.DEFAULT_CONTROLS));
 const controlState = {
     dasCnt: 0,
@@ -73,9 +81,11 @@ const controlState = {
     downTime: null,
 }
 const keyIsDown = Array(200).fill(0);
-
 const timeRule = JSON.parse(JSON.stringify(constants.DEFAULT_TIMERULE));
 
+//+++++++++++++++++ INITIALIZE +++++++++++++++++++++++++++++++++++++++++++++++
+
+//Initialize * room *
 function init() {
     // console.log("why?")
 
@@ -101,15 +111,47 @@ function init() {
     document.addEventListener("keyup", keyup);
 }
 
+//Initialize * match *
+function handleInit(number, roomCode) {
+    playerNumber = number;
+    _roomCode = roomCode;
+    keymaps.updateKeys(playerControls);
+}
+
+//Initialize * game *
 function handleInitGame() {
     // console.log("lmao");
     roomCodeDisplay.style.display = "none";
     startBtn.style.display = "none";
-
-    handleScoreUpdate();
+    
+    //init game
+    playerBoard = new gameBoard(7);
 
     gameActive = true;
 }
+
+//++++++++++++++ GAME INTERVAL +++++++++++++++++++++++++++++++++++++++++++++++
+
+function startGameInterval() {
+    intervalId = setInterval(() => {
+    }, 1000 / FRAME_RATE);
+}
+
+function handleGameState(gameState) {
+    if (!gameActive) {
+        return;
+    }
+    // console.log(1, controlState);
+    //horizontal movement
+
+
+    //do more stuff
+    gameState = JSON.parse(gameState);
+    requestAnimationFrame(() => drawGame(gameState));
+    // requestAnimationFrame(() => console.log(gameState));
+}
+
+//+++++++++++++ HANDLING INPUT +++++++++++++++++++++++++++++++++++++++++++++++
 
 function keydown(e) {
     if (!gameActive) {
@@ -131,25 +173,25 @@ function keydown(e) {
             controlState.downTime = Number(Date.now());
             break;
         case "rcw":
-            socket.emit("addAction", ["rcw", 1])
+            playerBoard.rotatePiece(1);
             break;
         case "r180":
-            socket.emit("addAction", ["rcw", 2])
+            playerBoard.rotatePiece(2);
             break;
         case "rccw":
-            socket.emit("addAction", ["rcw", 3])
+            playerBoard.rotatePiece(3);
             break;
         case "hold":
-            socket.emit("addAction", ["hold", 0])
+            playerBoard.holdPiece();
             break;
         case "left":
-            socket.emit("addAction", ["left", 1]);
+            playerBoard.moveSideways(1, -1);
             controlState.dasDir = "left";
             controlState.dasCnt = 0;
             controlState.dasTime = Number(Date.now()) + playerControls.handling.das;
             break;
         case "right":
-            socket.emit("addAction", ["right", 1]);
+            playerBoard.moveSideways(1, 1);
             controlState.dasDir = "right";
             controlState.dasCnt = 0;
             controlState.dasTime = Number(Date.now()) + playerControls.handling.das;
@@ -183,29 +225,7 @@ function keyup(e) {
     }
 }
 
-function drawGame(state) {
-    drawHold(p1Hc, p1H, state.p1Board, state.p1TimeLeft);
-    drawBoard(p1Bc, p1B, state.p1Board, state.p1TimeLeft);
-    // console.log("PLEASE???");
-    drawQueue(p1Qc, p1Q, state.p1Board, state.p1TimeLeft);
-
-    drawHold(p2Hc, p2H, state.p2Board, state.p2TimeLeft);
-    drawBoard(p2Bc, p2B, state.p2Board, state.p2TimeLeft);
-    drawQueue(p2Qc, p2Q, state.p2Board, state.p2TimeLeft);
-}
-
-function handleInit(number, roomCode) {
-    playerNumber = number;
-    _roomCode = roomCode;
-    keymaps.updateKeys(playerControls);
-}
-
-function handleGameState(gameState) {
-    if (!gameActive) {
-        return;
-    }
-    // console.log(1, controlState);
-    //horizontal movement
+function continueInput() {
     let curTime = Number(Date.now()), timesDid;
     if(controlState.dasDir != "N" && controlState.dasTime < curTime) {
         timesDid = Math.floor((curTime - controlState.dasTime) / playerControls.handling.arr);
@@ -229,11 +249,6 @@ function handleGameState(gameState) {
         socket.emit("addAction", ["sd", controlState.downCnt]);
         controlState.downCnt = 0;
     }
-
-    //do more stuff
-    gameState = JSON.parse(gameState);
-    requestAnimationFrame(() => drawGame(gameState));
-    // requestAnimationFrame(() => console.log(gameState));
 }
 
 function handleGameOver(data) {
@@ -242,8 +257,7 @@ function handleGameOver(data) {
     }
     data = JSON.parse(data);
 
-    gameActive = false;
-
+    
     if (data.winner === playerNumber) {
         myScore++;
         alert("You Win!");
@@ -251,9 +265,24 @@ function handleGameOver(data) {
         theirScore++;
         alert("You Lose :(");
     }
-
+    
+    gameActive = false;
     handleScoreUpdate();
+
     startBtn.style.display = "block";
+}
+
+//++++++++++++++ DRAW GAME +++++++++++++++++++++++++++++++++++++++++++++++++++
+
+function drawGame(state) {
+    drawHold(p1Hc, p1H, state.p1Board, state.p1TimeLeft);
+    drawBoard(p1Bc, p1B, state.p1Board, state.p1TimeLeft);
+    // console.log("PLEASE???");
+    drawQueue(p1Qc, p1Q, state.p1Board, state.p1TimeLeft);
+
+    drawHold(p2Hc, p2H, state.p2Board, state.p2TimeLeft);
+    drawBoard(p2Bc, p2B, state.p2Board, state.p2TimeLeft);
+    drawQueue(p2Qc, p2Q, state.p2Board, state.p2TimeLeft);
 }
 
 function handleScoreUpdate() {
