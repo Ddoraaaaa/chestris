@@ -52,7 +52,7 @@ function joinRoom() {
 
 function startGame() {
     // console.log("pressed");
-    socket.emit("startGame", _roomCode);
+    socket.emit("startGame", [_roomCode, timeRule]);
     // console.log("pressed");
 }
 
@@ -73,6 +73,8 @@ const controlState = {
     downTime: null,
 }
 const keyIsDown = Array(200).fill(0);
+
+const timeRule = JSON.parse(JSON.stringify(constants.DEFAULT_TIMERULE));
 
 function init() {
     // console.log("why?")

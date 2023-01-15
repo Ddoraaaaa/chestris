@@ -22,6 +22,8 @@ var dd = (function (exports) {
         }
     };
 
+    const DEFAULT_TIMERULE = Object.freeze([30, 500]);
+
     //BOARD AND GAMEFIELD
 
     const BOARD_BACKGROUND = "#303030";
@@ -100,6 +102,7 @@ var dd = (function (exports) {
         CTRL_KEYS: CTRL_KEYS,
         CV_PAD: CV_PAD,
         DEFAULT_CONTROLS: DEFAULT_CONTROLS,
+        DEFAULT_TIMERULE: DEFAULT_TIMERULE,
         GARBAGE_COLOR: GARBAGE_COLOR,
         GARBAGE_SIZE: GARBAGE_SIZE,
         LMAO: LMAO,
@@ -332,7 +335,7 @@ var dd = (function (exports) {
         ctx.restore();
     }
 
-    const socket = io("http://113.22.181.47:3000", {
+    const socket = io("http://127.0.0.1:3000", {
         transports: ["websocket", "polling", "flashsocket"],
     });
 
@@ -379,7 +382,7 @@ var dd = (function (exports) {
 
     function startGame() {
         // console.log("pressed");
-        socket.emit("startGame", _roomCode);
+        socket.emit("startGame", [_roomCode, timeRule]);
         // console.log("pressed");
     }
 
@@ -400,6 +403,8 @@ var dd = (function (exports) {
         downTime: null,
     };
     const keyIsDown = Array(200).fill(0);
+
+    const timeRule = JSON.parse(JSON.stringify(DEFAULT_TIMERULE));
 
     function init() {
         // console.log("why?")

@@ -178,7 +178,7 @@ export default class gameBoard {
                 }
             }
 
-            console.log("is it t spin?", this.isTSpin);
+            // console.log("is it t spin?", this.isTSpin);
             if(this.isTSpin >= 3) {
                 this.isTSpin = true;
             }
@@ -186,7 +186,7 @@ export default class gameBoard {
                 this.isTSpin = false;
             }
         }
-        console.log("is it t spin? no for real pls", this.isTSpin);
+        // console.log("is it t spin? no for real pls", this.isTSpin);
     }
 
     getTests = (oldRot, newRot, pieceId) => {

@@ -1,22 +1,22 @@
 import gameBoard from './board.js';
 
-export function initGame() {
-    const [state, emittedState] = createGameState();
+export function initGame(timeRule) {
+    const [state, emittedState] = createGameState(timeRule);
     return [state, emittedState];
 }
 
-export function createGameState() {
+export function createGameState(timeRule) {
     let state = {
         p1Board: new gameBoard(7),
-        p1TimeLeft: 60*1000,
+        p1TimeLeft: timeRule[0] * 1000,
         p2Board: new gameBoard(7),
-        p2TimeLeft: 60*1000,
+        p2TimeLeft: timeRule[0] * 1000,
     };
     let emittedState = {
         p1Board: {},
-        p1TimeLeft: 60*1000,
+        p1TimeLeft: timeRule[0] * 1000,
         p2Board: {},
-        p2TimeLeft: 60*1000,
+        p2TimeLeft: timeRule[0] * 1000,
     }
     updateEmittedState(state, emittedState);
     return [state, emittedState];

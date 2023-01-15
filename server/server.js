@@ -7,7 +7,8 @@ import { makeId } from "./src/utils.js";
 const state = {};
 const emittedState = {};
 const clientRooms = {};
-const playerTurn = {}
+const playerTurn = {};
+const timeAdd = {};
 
 const httpServer = createServer();
 const io = new Server(httpServer, { /* options */ });
@@ -63,11 +64,14 @@ io.on('connection', client => {
         // console.log(state[roomName])
     }
 
-    function handleStartGame(roomName) {
+    function handleStartGame(gameRules) {
+        let [roomName, timeRule] = gameRules;
+        // console.log(roomName)
+        timeAdd[roomName] = timeRule[1];
         // console.log("reached here");
-        [state[roomName], emittedState[roomName]] = initGame();
+        [state[roomName], emittedState[roomName]] = initGame(timeRule);
         playerTurn[roomName] = Math.floor(Math.random()*2)+1;
-        console.log(playerTurn[roomName]);
+        // console.log(playerTurn[roomName]);
         // console.log("hi", state[roomName]);
         
         startGameInterval(roomName);
@@ -92,7 +96,15 @@ io.on('connection', client => {
         switch(keyCode) {
             case "hd":
                 let damageDealt = thisPlayer.hardDrop();
-                console.log(damageDealt);
+                switch(client.number) {
+                    case 1:
+                        state[roomName].p1TimeLeft += timeAdd[roomName];
+                        break;
+                    case 2:
+                        state[roomName].p2TimeLeft += timeAdd[roomName];
+                        break;
+                }
+                // console.log(damageDealt);
                 if(damageDealt) {
                     otherPlayer.gotSentGarbage(damageDealt);
                 }
@@ -121,7 +133,7 @@ io.on('connection', client => {
 function startGameInterval(roomName) {
     const intervalId = setInterval(() => {
         const winner = gameLoop(state[roomName], 1000 / FRAME_RATE, playerTurn[roomName]);
-        console.log(state[roomName]);
+        // console.log(state[roomName]);
         if (!winner) {
             updateEmittedState(state[roomName], emittedState[roomName]);
             emitGameState(roomName, emittedState[roomName])
@@ -145,4 +157,4 @@ function emitGameOver(room, winner) {
         .emit('gameOver', JSON.stringify({ winner }));
 }
 
-httpServer.listen(3000, "127.0.0.1");
+httpServer.listen(3000);

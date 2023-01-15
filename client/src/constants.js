@@ -19,6 +19,8 @@ export const DEFAULT_CONTROLS = {
     }
 }
 
+export const DEFAULT_TIMERULE = Object.freeze([30, 500]);
+
 //BOARD AND GAMEFIELD
 
 export const BOARD_BACKGROUND = "#303030";
