@@ -11,7 +11,10 @@ Playable demo at: https://bespoke-sawine-c487ac.netlify.app/
 Usage:
 
 Client: 
-```rollup --config```
+```
+rollup --config
+```
+Entry point: index.html
 
 Server:
 ```
