@@ -3,6 +3,11 @@ export function hideElement(elem) {
     elem.classList.add("d-none");
 }
 
+export function unhideElement(elem) {
+    elem.classList.add("d-flex");
+    elem.classList.remove("d-none")
+}
+
 export function getCookie() {
     var cookie = document.cookie;
     var res = {};

@@ -3,6 +3,7 @@ var dd = (function (exports) {
 
     const CTRL_KEYS = ["das", "arr", "grav", "right", "left", "sd", "hd", "hold", "rcw", "rccw", "r180"];
     const LMAO = "1";
+    const FRAME_RATE$1 = 60;
 
     const DEFAULT_CONTROLS = {
         handling: {
@@ -26,18 +27,18 @@ var dd = (function (exports) {
 
     //BOARD AND GAMEFIELD
 
-    const BOARD_BACKGROUND = "#303030";
+    const BOARD_BACKGROUND$1 = "#303030";
     const GARBAGE_COLOR = "#DD0000";
-    const BOARD_HEIGHT = 40;
-    const BOARD_VISIBLE_HEIGHT = 20;
-    const BOARD_WIDTH = 10;
-    const PREVIEW_QUEUE = 5;
+    const BOARD_HEIGHT$1 = 40;
+    const BOARD_VISIBLE_HEIGHT$1 = 20;
+    const BOARD_WIDTH$1 = 10;
+    const PREVIEW_QUEUE$1 = 5;
     const MINO_SIZE = 30;
     const GARBAGE_SIZE = 6;
     const CV_PAD = 20;
 
     //PIECE
-    const PIECE_COLOR = [   BOARD_BACKGROUND,  //none
+    const PIECE_COLOR$1 = [   BOARD_BACKGROUND$1,  //none
                             "#ea620e",  //orange    L
                             "#2141C6",  //blue      J
                             "#58B103",  //green     S
@@ -47,7 +48,7 @@ var dd = (function (exports) {
                             "#AF2989",  //purple    T
                             "#909090"]; //gray      garbage
 
-    const PIECE_POSITION = [
+    const PIECE_POSITION$1 = [
         [],                                       //                     No piece
         [
             { x: [1, 1, 1, 2], y: [0, 1, 2, 2] }, // ..# .#. ... ##.     L piece
@@ -95,26 +96,32 @@ var dd = (function (exports) {
 
     var constants = /*#__PURE__*/Object.freeze({
         __proto__: null,
-        BOARD_BACKGROUND: BOARD_BACKGROUND,
-        BOARD_HEIGHT: BOARD_HEIGHT,
-        BOARD_VISIBLE_HEIGHT: BOARD_VISIBLE_HEIGHT,
-        BOARD_WIDTH: BOARD_WIDTH,
+        BOARD_BACKGROUND: BOARD_BACKGROUND$1,
+        BOARD_HEIGHT: BOARD_HEIGHT$1,
+        BOARD_VISIBLE_HEIGHT: BOARD_VISIBLE_HEIGHT$1,
+        BOARD_WIDTH: BOARD_WIDTH$1,
         CTRL_KEYS: CTRL_KEYS,
         CV_PAD: CV_PAD,
         DEFAULT_CONTROLS: DEFAULT_CONTROLS,
         DEFAULT_TIMERULE: DEFAULT_TIMERULE,
+        FRAME_RATE: FRAME_RATE$1,
         GARBAGE_COLOR: GARBAGE_COLOR,
         GARBAGE_SIZE: GARBAGE_SIZE,
         LMAO: LMAO,
         MINO_SIZE: MINO_SIZE,
-        PIECE_COLOR: PIECE_COLOR,
-        PIECE_POSITION: PIECE_POSITION,
-        PREVIEW_QUEUE: PREVIEW_QUEUE
+        PIECE_COLOR: PIECE_COLOR$1,
+        PIECE_POSITION: PIECE_POSITION$1,
+        PREVIEW_QUEUE: PREVIEW_QUEUE$1
     });
 
     function hideElement(elem) {
         elem.classList.remove("d-flex");
         elem.classList.add("d-none");
+    }
+
+    function unhideElement(elem) {
+        elem.classList.add("d-flex");
+        elem.classList.remove("d-none");
     }
 
     function getCookie() {
@@ -154,7 +161,8 @@ var dd = (function (exports) {
         enforceMinMax: enforceMinMax,
         getCookie: getCookie,
         hideElement: hideElement,
-        setCookie: setCookie
+        setCookie: setCookie,
+        unhideElement: unhideElement
     });
 
     function updateKeys(playerControls) {
@@ -198,12 +206,12 @@ var dd = (function (exports) {
     }
 
     function mapKeys(frm) {
-        console.log(frm);
+        // console.log(frm);
         const formData = new FormData(frm);
         const formDataObj = Object.fromEntries(formData.entries());
 
-        console.log(formData.entries());
-        console.log(formDataObj);
+        // console.log(formData.entries());
+        // console.log(formDataObj);
 
         for(var key in formDataObj) {
             if(formDataObj[key]) {
@@ -231,7 +239,7 @@ var dd = (function (exports) {
     function drawMino(ctx, canvas, x, y, pieceId) {
         // console.log("drawing mino at: ", x, y, pieceId);
         ctx.save();
-            ctx.fillStyle = PIECE_COLOR[pieceId];
+            ctx.fillStyle = PIECE_COLOR$1[pieceId];
             ctx.fillRect(x + 1, y + 1, MINO_SIZE - 2, MINO_SIZE - 2);
         ctx.restore();
     }
@@ -242,8 +250,8 @@ var dd = (function (exports) {
         }
         // console.log(x, y, pieceId, rot);
         ctx.save();
-        const xVals = PIECE_POSITION[pieceId][rot].x;
-        const yVals = PIECE_POSITION[pieceId][rot].y;
+        const xVals = PIECE_POSITION$1[pieceId][rot].x;
+        const yVals = PIECE_POSITION$1[pieceId][rot].y;
         for(let i = 0; i < 4; i++) {
                 // console.log("???")
                 const [xDraw, yDraw] =  [
@@ -256,7 +264,7 @@ var dd = (function (exports) {
     }
 
     function drawHold(ctx, canvas, state, timeLeft) {
-        ctx.fillStyle = BOARD_BACKGROUND;
+        ctx.fillStyle = BOARD_BACKGROUND$1;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         // ctx.fillRect(CV_PAD / 2, CV_PAD / 2, canvas.width - CV_PAD, canvas.height - CV_PAD);
         ctx.save();
@@ -283,14 +291,14 @@ var dd = (function (exports) {
     }
 
     function drawBoard(ctx, canvas, state, timeLeft) {
-        ctx.fillStyle = BOARD_BACKGROUND;
+        ctx.fillStyle = BOARD_BACKGROUND$1;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         // ctx.fillRect(CV_PAD / 2, CV_PAD / 2, canvas.width - CV_PAD, canvas.height - CV_PAD);
         ctx.save();
             ctx.translate(CV_PAD, CV_PAD);
             //draw garbage
             ctx.fillStyle = GARBAGE_COLOR;
-            let curTop = MINO_SIZE * BOARD_VISIBLE_HEIGHT, curSz;
+            let curTop = MINO_SIZE * BOARD_VISIBLE_HEIGHT$1, curSz;
             for(let i of state.garbageQueue) {
                 curSz = Math.min(i * MINO_SIZE, curTop);
                 curTop -= curSz;
@@ -304,18 +312,18 @@ var dd = (function (exports) {
                 ctx.translate(GARBAGE_SIZE, 0);
                 //draw board
                 let pieceId;
-                for(let i = 1; i <= BOARD_VISIBLE_HEIGHT; i++) {
-                    for(let j = 1; j <= BOARD_WIDTH; j++) {
+                for(let i = 1; i <= BOARD_VISIBLE_HEIGHT$1; i++) {
+                    for(let j = 1; j <= BOARD_WIDTH$1; j++) {
                         pieceId = Number(state.board[i][j-1]);
                         // pieceId = (state.board[i] >> (4 * (j - 1))) & 15;
-                        drawMino(ctx, canvas, (j - 1) * MINO_SIZE, (BOARD_VISIBLE_HEIGHT - i) * MINO_SIZE, pieceId);
+                        drawMino(ctx, canvas, (j - 1) * MINO_SIZE, (BOARD_VISIBLE_HEIGHT$1 - i) * MINO_SIZE, pieceId);
                     }
                 }
                 //draw active piece
                 drawPiece(  ctx, 
                             canvas, 
                             (state.activePiecePos[1] - 1) * MINO_SIZE, 
-                            (BOARD_VISIBLE_HEIGHT - state.activePiecePos[0] + 1) * MINO_SIZE, 
+                            (BOARD_VISIBLE_HEIGHT$1 - state.activePiecePos[0] + 1) * MINO_SIZE, 
                             state.activePiece, 
                             state.activePieceRot);
             ctx.restore();
@@ -324,7 +332,7 @@ var dd = (function (exports) {
 
     function drawQueue(ctx, canvas, state, timeLeft) {
         // console.log("drawing queue");
-        ctx.fillStyle = BOARD_BACKGROUND;
+        ctx.fillStyle = BOARD_BACKGROUND$1;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         // ctx.fillRect(CV_PAD / 2, CV_PAD / 2, canvas.width - CV_PAD, canvas.height - CV_PAD);
         ctx.save();
@@ -335,6 +343,518 @@ var dd = (function (exports) {
         ctx.restore();
     }
 
+    // +++++++++++++++++++++ SERVER INFORMATION ++++++++++++++++++++++++++++++++++
+    const FRAME_RATE = 60;
+    const GRID_SIZE = 20;
+    const CODE_LENGTH = 6;
+
+    // +++++++++++++++++++++ BOARD INFORMATION +++++++++++++++++++++++++++++++++++
+    const BOARD_BACKGROUND = "#FFFFFF";
+    const BOARD_HEIGHT = 40;
+    const BOARD_VISIBLE_HEIGHT = 20;
+    const BOARD_WIDTH = 10;
+    const PREVIEW_QUEUE = 5;
+
+    // +++++++++++++++++++++ PIECE INFORMATION +++++++++++++++++++++++++++++++++++
+    // 0:none 1:L 2:J 3:S 4:Z 5:I 6:O 7:T, 8:garbage
+    const PIECE_COLOR = [   BOARD_BACKGROUND,  //none
+                            "#ea620e",  //orange    L
+                            "#2141C6",  //blue      J
+                            "#58B103",  //green     S
+                            "#D70F37",  //red       Z
+                            "#109BD7",  //sky blue  I
+                            "#E39F00",  //yellow    O  
+                            "#AF2989",  //purple    T
+                            "#909090"];  //gray      garbage
+
+    //(0, 0) being lower left position. (x, y) means x rows up and y cols right
+    const PIECE_POSITION = [
+        [],                                       //                     No piece
+        [
+            { x: [1, 1, 1, 2], y: [0, 1, 2, 2] }, // ..# .#. ... ##.     L piece
+            { x: [0, 1, 2, 0], y: [1, 1, 1, 2] }, // ### .#. ### .#.
+            { x: [1, 1, 1, 0], y: [0, 1, 2, 0] }, // ... .## #.. .#.
+            { x: [0, 1, 2, 2], y: [1, 1, 1, 0] }  //
+        ],
+        [
+            { x: [1, 1, 1, 2], y: [0, 1, 2, 0] }, // #.. .## ... .#.     J piece
+            { x: [0, 1, 2, 2], y: [1, 1, 1, 2] }, // ### .#. ### .#.
+            { x: [1, 1, 1, 0], y: [0, 1, 2, 2] }, // ... .#. ..# ##.
+            { x: [0, 1, 2, 0], y: [1, 1, 1, 0] }  //
+        ],
+        [
+            { x: [1, 1, 2, 2], y: [0, 1, 1, 2] }, // .## .#. ... #..     S piece
+            { x: [2, 1, 1, 0], y: [1, 1, 2, 2] }, // ##. .## .## ##.
+            { x: [0, 0, 1, 1], y: [0, 1, 1, 2] }, // ... ..# ##. .#.
+            { x: [2, 1, 1, 0], y: [0, 0, 1, 1] }  //
+        ],
+        [
+            { x: [2, 2, 1, 1], y: [0, 1, 1, 2] }, // ##. ..# ... .#.     Z piece
+            { x: [2, 1, 1, 0], y: [2, 2, 1, 1] }, // .## .## ##. ##.
+            { x: [1, 1, 0, 0], y: [0, 1, 1, 2] }, // ... .#. .## #..
+            { x: [0, 1, 1, 2], y: [0, 0, 1, 1] }  //
+        ],
+        [
+            { x: [2, 2, 2, 2], y: [0, 1, 2, 3] }, // .... ..#. .... .#.. I piece
+            { x: [0, 1, 2, 3], y: [2, 2, 2, 2] }, // #### ..#. .... .#..
+            { x: [1, 1, 1, 1], y: [0, 1, 2, 3] }, // .... ..#. #### .#..
+            { x: [0, 1, 2, 3], y: [1, 1, 1, 1] }  // .... ..#. .... .#..
+        ],
+        [
+            { x: [0, 1, 0, 1], y: [0, 0, 1, 1] }, // ## ## ## ##         O piece
+            { x: [0, 1, 0, 1], y: [0, 0, 1, 1] }, // ## ## ## ##
+            { x: [0, 1, 0, 1], y: [0, 0, 1, 1] }, //
+            { x: [0, 1, 0, 1], y: [0, 0, 1, 1] }  //
+        ],
+        [
+            { x: [1, 1, 1, 2], y: [0, 1, 2, 1] }, // .#. .#. ... .#.     T piece
+            { x: [0, 1, 2, 1], y: [1, 1, 1, 2] }, // ### .## ### ##.
+            { x: [1, 1, 1, 0], y: [0, 1, 2, 1] }, // ... .#. .#. .#.
+            { x: [0, 1, 2, 1], y: [1, 1, 1, 0] }  //
+        ]
+    ];
+
+    const PIECE_SPAWN = [
+        [], //none
+        [19, 4], //L
+        [19, 4], //J
+        [19, 4], //S
+        [19, 4], //Z
+        [18, 4], //I
+        [20, 5], //O
+        [19, 4]  //T
+    ];
+
+    //[i][j][k] is kth test, i = is I piece or not,
+    //j*90 degrees clockwise. from j to j1 subtract [i][j1][k] from [i][j][k]
+    const ROTATION_OFFSET = [
+        [
+            [[0, 0],  [0, 0],  [0, 0],  [0, 0],  [0, 0]],
+            [[0, 0],  [0, 1],  [-1, 1], [2, 0],  [2, 1]],
+            [[0, 0],  [0, 0],  [0, 0],  [0, 0],  [0, 0]],
+            [[0, 0],  [0, -1], [-1, -1],[2, 0],  [2, -1]]
+        ],
+        [
+            [[0, 0], [0, 0],  [0, -1], [0, 2],  [0, -1], [0, 2]],
+            [[0, 0], [0, -1], [0, 0],  [0, 0],  [1, 0],  [-2, 0]],
+            [[0, 0], [1, -1], [1, 1],  [1, -2], [0, 1],  [0, -2]],
+            [[0, 0], [1, 0],  [1, 0],  [1, 0],  [-1, 0], [2, 0]]
+        ]
+    ];
+
+    // +++++++++++++++++++++ GAME RULE +++++++++++++++++++++++++++++++++++++++++++
+    const TSPIN_DMG = [0, 2, 3, 6];
+    const TSPIN_CHECK = [[0, 0], [0, 2], [2, 0], [2, 2]];
+    const B2B_DMG = [2, 6, 11, 15, 18, 20, 20, 22];
+    const LINE_DMG = [0, 0, 1, 2, 4];
+    const COMBO_DMG = [0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 6, 7];
+    const PC_DMG = 10;
+
+    class gameBoard {
+        // 0:none 1:L 2:J 3:S 4:Z 5:I 6:O 7:T 8:garbage
+        // board: 1->40:D->U then 1->10:L->R 
+        constructor(bagSize) {
+            //the actual board
+            this.board = new Array(BOARD_HEIGHT + 1).fill("0000000000");
+            this.boardMask = new Array(BOARD_HEIGHT + 1).fill(0);
+
+            //things around the board
+            this.garbageQueue = [];
+            this.nextQueue = [];
+            this.heldPiece = 0;
+            this.activePiece = 0;
+            this.activePiecePos = [0, 0];
+            this.activePieceRot = 0;
+
+            //game rules
+            this.gameOver = false;
+            this._bagSize = bagSize;
+            this.backToBack = 0;
+            this.comboCount = 0;
+
+            this.fillNextQueue();
+            this.spawnPiece();
+        }
+
+        //+++++++++++++++++++ PIECES "LOGISTIC" ++++++++++++++++++++++++++++++++++
+        //swap current piece with held piece
+        //take new piece if no held yet
+        holdPiece = () => {
+            if(this.heldPiece == 0) {
+                this.heldPiece = this.getNextPiece();
+            }
+            [this.heldPiece, this.activePiece] = [this.activePiece, this.heldPiece];
+            this.activePiecePos = [...PIECE_SPAWN[this.activePiece]];
+            this.activePieceRot = 0;
+        }
+
+        //get next piece in next queue. remove it from next queue
+        getNextPiece = () => {
+            const res = this.nextQueue.shift();
+            this.fillNextQueue();
+            return res;
+        }
+
+        //fill up next queue till it is more than the preview queue
+        fillNextQueue = () => {
+            while(this.nextQueue.length < PREVIEW_QUEUE) {
+                this.getNewBag();
+            }
+        }
+
+        //get a new bag to put in the queue
+        getNewBag = () => {
+            if(!this._bagSize==1) {
+                this.nextQueue.push(Math.floor(Math.random() * 7) + 1);
+            }
+            else if([7, 14].includes(this._bagSize)) {
+                let newPieces = [];
+                for(let i = 0; i < this._bagSize; i++) {
+                    newPieces.push(i % 7 + 1);
+                    if(i > 0) {
+                        let swapPos = Math.floor(Math.random() * i);
+                        [newPieces[i], newPieces[swapPos]] = [newPieces[swapPos], newPieces[i]];
+                    }
+                }
+                this.nextQueue = [...this.nextQueue, ...newPieces];
+            }
+        }
+
+        //+++++++++++++++++++ PIECE HANDLING +++++++++++++++++++++++++++++++++++++
+        spawnPiece = () => {
+            this.activePiece = this.getNextPiece();
+            this.activePiecePos = [...PIECE_SPAWN[this.activePiece]];
+            this.activePieceRot = 0;
+            if(!this.checkCollision( this.activePiece,
+                                    this.activePiecePos,
+                                    this.activePieceRot)) {
+                this.gameOver = true;
+            }
+        }
+
+        hardDrop = () => {
+            this.softDrop(BOARD_HEIGHT);
+            this.applyPiece();
+            let clearedLine = this.killClearedLines();
+            let damage = this.calculateDamage(clearedLine);
+            damage = this.cancelGarbage(damage);
+            this.lastMove = 0;
+            this.isTSpin = 0;
+            this.addGarbage();
+            this.spawnPiece();
+            return damage;
+        }
+
+        //times rotated clockwisely
+        rotatePiece = (timesRot) => {
+            let newRot = (this.activePieceRot + timesRot) & 3;
+            let rotOffset = this.getTests(this.activePieceRot, newRot, this.activePiece);
+            // console.log("lmao", rotOffset);
+            for(let [x, y] of rotOffset) {
+                // console.log(x, y, "please just work");
+                if(this.checkCollision( this.activePiece,
+                                        [
+                                            this.activePiecePos[0] + x,
+                                            this.activePiecePos[1] + y
+                                        ],
+                                        newRot)) {
+                    this.activePieceRot = newRot;
+                    this.activePiecePos[0] += x;
+                    this.activePiecePos[1] += y;
+                    this.lastMove = 1;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        softDrop = (timesFall) => {
+            while(timesFall) {
+                timesFall--;
+                if(this.checkCollision( this.activePiece,
+                                        [
+                                            this.activePiecePos[0] - 1,
+                                            this.activePiecePos[1],
+                                        ],
+                                        this.activePieceRot)) {
+                    this.lastMove = 0;
+                    this.activePiecePos[0]--;
+                }
+                else {
+                    return;
+                }
+            }
+            return;
+        }
+
+        //-1 is left, 1 is right
+        moveSideways = (timesMove, direction) => {
+            while(timesMove) {
+                timesMove--;
+                if(this.checkCollision( this.activePiece,
+                                        [
+                                            this.activePiecePos[0],
+                                            this.activePiecePos[1] + direction,
+                                        ],
+                                        this.activePieceRot)) {
+                    this.activePiecePos[1] += direction;
+                    this.lastMove = 0;
+                }
+                else {
+                    return;
+                }
+            }
+        }
+
+        //put piece onto the board. called after hard drop
+        applyPiece = () => {
+            const xVals = PIECE_POSITION[this.activePiece][this.activePieceRot].x;
+            const yVals = PIECE_POSITION[this.activePiece][this.activePieceRot].y;
+            for(let i = 0; i < 4; i++) {
+                const [x, y] =  [
+                                    xVals[i] + this.activePiecePos[0], 
+                                    yVals[i] + this.activePiecePos[1]
+                                ];
+                this.makePos(x, y, this.activePiece);
+            }
+            //check t spin
+            // console.log(this.activePiece);
+            if(this.activePiece == 7) {
+                this.isTSpin = 0;
+                for(let [addX, addY] of TSPIN_CHECK) {
+                    // console.log("wtf help", addX, addY, this.activePiecePos);
+                    if(this.checkPos(this.activePiecePos[0] + addX, this.activePiecePos[1] + addY)) {
+                        this.isTSpin++;
+                    }
+                }
+
+                // console.log("is it t spin?", this.isTSpin);
+                if(this.isTSpin >= 3) {
+                    this.isTSpin = true;
+                }
+                else {
+                    this.isTSpin = false;
+                }
+            }
+            // console.log("is it t spin? no for real pls", this.isTSpin);
+        }
+
+        getTests = (oldRot, newRot, pieceId) => {
+            // console.log(this.activePiecePos.type);
+            // console.log(this.activePiecePos);
+            let [x, y] = this.activePiecePos;
+            // console.log(ROTATION_OFFSET);
+            const oldRotOff = ROTATION_OFFSET[(pieceId == 5 ? 1 : 0)][oldRot];
+            const newRotOff = ROTATION_OFFSET[(pieceId == 5 ? 1 : 0)][newRot];
+            // console.log("wtflmao???", newRotOff);
+            let rotOffset = oldRotOff.map((val, index) => {
+                return [val[0] - newRotOff[index][0], val[1] - newRotOff[index][1]];
+            });
+            return rotOffset;
+        } 
+
+        checkCollision = (pieceId, pos, rot) => {
+            // console.log(pieceId, pos, rot);
+            // console.log(PIECE_POSITION[pieceId]);
+            const xVals = PIECE_POSITION[pieceId][rot].x;
+            const yVals = PIECE_POSITION[pieceId][rot].y;
+            for(let i = 0; i < 4; i++) {
+                const [x, y] = [xVals[i] + pos[0], yVals[i] + pos[1]];
+                if(this.checkPos(x, y)) {
+                    // console.log(x, y, "failed here!!");
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        //++++++++++++++++ MINO HANDLING +++++++++++++++++++++++++++++++++++++++++
+        //get type of mino at row i, col j
+        atPos = (i, j) => {
+            return Number(this.board[i][j-1]);
+            // return (this.board[i] >> (4 * (j - 1))) & 15;
+        }
+
+        checkPos = (i, j) => {
+            // console.log(i, j);
+            if(i < 1 || j < 1 || i > BOARD_HEIGHT || j > BOARD_WIDTH) return true;
+            return (this.boardMask[i] >> (j - 1)) & 1;
+        }
+
+        //update mino at row i, col j to val
+        makePos = (i, j, val) => {
+            // console.log("assigning", i, j, val);
+            this.board[i] = this.board[i].substring(0, j-1) + String(val) + this.board[i].substring(j);
+            // let valAtPos = (this.board[i] >> (4 * (j - 1))) & 15;
+            // console.log(valAtPos);
+            // valAtPos = val - valAtPos;  
+            // console.log(valAtPos, valAtPos << (4 * (j - 1)), valAtPos, 4*(j-1),2 << 36);
+            // this.board[i]+= valAtPos << (4 * (j - 1));
+            if(val >= 1) {
+                this.boardMask[i] |= 1 << (j - 1);
+            }
+            // console.log(this.board[i]);
+        }
+
+        //+++++++++++++++++++ BOARD HANDLING +++++++++++++++++++++++++++++++++++++
+        //clear all the full lines, calculate damage as well.
+        killClearedLines = () => {
+            let clearedLine = 0;
+            for(let i = this.board.length - 1; i > 0; i--) {
+                if(this.boardMask[i] == (1 << BOARD_WIDTH) - 1) {
+                    // console.log("cleared at", i);
+                    this.board.splice(i, 1);
+                    this.boardMask.splice(i, 1);
+                    clearedLine++;
+                }
+            }
+            this.resizeBoard();
+            return clearedLine;
+        }
+
+        //get the amount of damage dealt
+        calculateDamage = (clearedLine) => {
+            // console.log("debugging cleared line", clearedLine);
+            let res = 0;
+            if(!clearedLine) {
+                this.comboCount = 0;
+                if(this.isTSpin) {
+                    this.backToBack++;
+                }
+                return res;
+            }
+            this.comboCount++;
+            //damage for spins
+            if(clearedLine == 4) {
+                this.backToBack++;
+            }
+            else if(this.lastMove) {
+                if(this.isTSpin) {
+                    this.backToBack++;
+                    // console.log("has t spin");
+                    res += TSPIN_DMG[clearedLine];
+                }
+                else if(this.pieceId <= 4 && clearedLine == 3) {
+                    this.backToBack++;
+                    // console.log("has spin");
+                    res += TSPIN_DMG[clearedLine];
+                }
+                else {
+                    this.backToBack = 0;
+                }
+            }
+            else {
+                this.backToBack = 0;
+            }
+            // console.log("before combo", res);
+            //damage for cleared lines or combo
+            res += LINE_DMG[clearedLine] + COMBO_DMG[this.comboCount];
+            // console.log("after combo", res);
+
+            //damage for back to back
+            for(let i of B2B_DMG) {
+                if(i <= this.backToBack) {
+                    res++;
+                }
+                else {
+                    break;
+                }
+            }
+
+            //damage for perfect clear
+            
+            if(this.boardMask[1] == 0) {
+                // console.log("has pc");
+                res += PC_DMG;
+            }
+            // console.log("finished. I have no fucking idea what is happening");
+            return res;
+        }
+
+        gotSentGarbage = (garbage) => {
+            if(garbage > 0) {
+                this.garbageQueue.push(garbage);
+            }
+        }
+
+        //add the next garbage in queue
+        addGarbage = () => {
+            if(this.garbageQueue.len == 0) return;
+            const paddingLine = this.board.shift();
+            this.boardMask.shift();
+            const nextGarbage = this.garbageQueue.shift();
+            const garbagePos = Math.floor(Math.random() * BOARD_WIDTH);
+            let garbage = "", garbageMask = 0;
+            for(let i = 0; i < BOARD_WIDTH; i++) {
+                if(i != garbagePos) {
+                    garbage += "8";
+                    // garbage |= 8 << (4 * i);
+                    garbageMask |= 1 << i;
+                }
+                else {
+                    garbage+= "0";
+                }
+            }
+            for(let i = 0; i < nextGarbage; i++) {
+                this.board.unshift(garbage);
+                this.boardMask.unshift(garbageMask);
+            }
+            this.board.unshift(paddingLine);
+            this.boardMask.unshift(0);
+            this.resizeBoard();
+            // console.log(this.board);
+            // console.log(this.boardMask);
+        }
+
+        cancelGarbage = (damage) => {
+            // let cac = 10;
+            // console.log("hi, pls work", damage, this.garbageQueue);
+            while(damage != 0) {
+                // cac--;
+                // console.log("hi, why dont you work", damage, this.garbageQueue);
+                if(this.garbageQueue.length == 0) {
+                    // console.log("hi, pls work!!1", damage, this.garbageQueue);
+                    return damage;
+                }
+                if(this.garbageQueue[0] > damage) {
+                    this.garbageQueue[0] -= damage;
+                    damage = 0;
+                }
+                else {
+                    damage -= this.garbageQueue[0];
+                    this.garbageQueue.shift();
+                }
+            }
+            // console.log("hi, pls work!!2", damage, this.garbageQueue);
+            return damage;
+        }
+
+        //resize the board after a modification
+        resizeBoard = () => {
+            while(this.board.length <= BOARD_HEIGHT) {
+                this.board.push("0000000000");
+                this.boardMask.push(0);
+            }
+            while(this.board.length > BOARD_HEIGHT + 1) {
+                this.board.pop();
+                this.boardMask.pop();
+            }
+        }
+
+        //return an object of the board state, to pass to the client for rendering
+        makeBoardObject = (res) => {
+            res.board = this.board;
+            res.garbageQueue = this.garbageQueue;
+            res.heldPiece = this.heldPiece;
+            res.nextQueue = this.nextQueue;
+            res.activePiece = this.activePiece;
+            res.activePiecePos = this.activePiecePos;
+            res.activePieceRot = this.activePieceRot;
+            res.backToBack = this.backToBack;
+            res.comboCount = this.comboCount;
+        }
+    }
+
     const socket = io(
                         "http://localhost:3000" || 
                         "https://chestris.herokuapp.com/", {
@@ -343,11 +863,13 @@ var dd = (function (exports) {
 
     socket.on("init", handleInit);
     socket.on("initGame", handleInitGame);
-    socket.on("gameState", handleGameState);
+    socket.on("updFromOpponent", handleOpponent);
+    socket.on("updFromServer", handleServer);
     socket.on("gameOver", handleGameOver);
     socket.on("roomCode", handleRoomCode);
     socket.on("unknownCode", handleUnknownCode);
     socket.on("tooManyPlayers", handleTooManyPlayers);
+    socket.on("setTimeRules", setTimeRule);
 
     const gameScreen = document.getElementById("gameScreen");
     const initialScreen = document.getElementById("initialScreen");
@@ -360,6 +882,7 @@ var dd = (function (exports) {
 
     const roomCodeDisplay = document.getElementById("roomCodeDisplay");
     const roomCodeText = document.getElementById("roomCodeText");
+    const gameTimeRule = document.getElementById("gameRuleForm");
 
     const playerScores = document.getElementById("playerScores");
 
@@ -383,6 +906,14 @@ var dd = (function (exports) {
     }
 
     function startGame() {
+        const formData = new FormData(document.forms.namedItem("gameRuleForm"));
+        const formDataObj = Object.fromEntries(formData.entries());
+        if(formDataObj.initime) {
+            timeRule[0] = formDataObj.initime;
+        }
+        if(formDataObj.addtime) {
+            timeRule[1] = formDataObj.addtime;
+        }
         // console.log("pressed");
         socket.emit("startGame", [_roomCode, timeRule]);
         // console.log("pressed");
@@ -392,8 +923,14 @@ var dd = (function (exports) {
     let p1Hc, p1Bc, p1Qc;
     let p2H, p2B, p2Q;
     let p2Hc, p2Bc, p2Qc;
-    let playerNumber;
+    let playerNumber, playerTurn;
     let gameActive = false;
+
+    let gameInterval;
+    let p1Board, p2Board, p1TimeLeft, p2TimeLeft;
+    let p1BoardSimple;
+
+    // +++++++++++++++++ CONTROLS ++++++++++++++++++++++++++++++++++++++++++++++++
 
     const playerControls = JSON.parse(JSON.stringify(DEFAULT_CONTROLS));
     const controlState = {
@@ -405,9 +942,11 @@ var dd = (function (exports) {
         downTime: null,
     };
     const keyIsDown = Array(200).fill(0);
+    let timeRule = JSON.parse(JSON.stringify(DEFAULT_TIMERULE));
 
-    const timeRule = JSON.parse(JSON.stringify(DEFAULT_TIMERULE));
+    //+++++++++++++++++ INITIALIZE +++++++++++++++++++++++++++++++++++++++++++++++
 
+    //Initialize * room *
     function init() {
         // console.log("why?")
 
@@ -423,28 +962,106 @@ var dd = (function (exports) {
 
         p1H.width = p2H.width = p1Q.width = p2Q.width 
                               = 4 * MINO_SIZE + 2 * CV_PAD;
-        p1B.width = p2B.width = BOARD_WIDTH * MINO_SIZE +
+        p1B.width = p2B.width = BOARD_WIDTH$1 * MINO_SIZE +
                                 GARBAGE_SIZE + 2 * CV_PAD;
         p1B.height = p2B.height = p1H.height = p2H.height = p1Q.height = p2Q.height
-                                = BOARD_VISIBLE_HEIGHT * MINO_SIZE +
+                                = BOARD_VISIBLE_HEIGHT$1 * MINO_SIZE +
                                   CV_PAD * 2;
 
         document.addEventListener("keydown", keydown);
         document.addEventListener("keyup", keyup);
     }
 
-    function handleInitGame() {
+    //Initialize * match *
+    function handleInit(number, roomCode) {
+        playerNumber = number;
+        _roomCode = roomCode;
+        updateKeys(playerControls);
+    }
+
+    //Initialize * game *
+    function handleInitGame(plrTrn) {
+        playerTurn = plrTrn;
         // console.log("lmao");
         roomCodeDisplay.style.display = "none";
+        gameTimeRule.style.display = "none";
         startBtn.style.display = "none";
+        
+        //init game boards;
+        p1Board = new gameBoard(7);
+        p1BoardSimple = {};
+        p1Board.makeBoardObject(p1BoardSimple);
+        p2Board = null;
 
-        handleScoreUpdate();
+        socket.emit("refreshBoard", JSON.stringify(p1BoardSimple));
 
+        p1TimeLeft = p2TimeLeft = 0;
+
+        startGameInterval();
         gameActive = true;
     }
 
-    function keydown(e) {
+    function setTimeRule(timeRules) {
+        timeRule = timeRules;
+    }
+
+    //++++++++++++++ GAME INTERVAL +++++++++++++++++++++++++++++++++++++++++++++++
+
+    function startGameInterval() {
+        gameInterval = setInterval(() => {
+            // console.log("intervin'");
+            continueInput();
+            socket.emit("refreshBoard", JSON.stringify(p1BoardSimple));
+            requestAnimationFrame(() => drawGame());
+        }, 1000 / FRAME_RATE$1);
+    }
+
+    function handleServer(updData) {
+        [p1TimeLeft, p2TimeLeft] = updData;
+        if(playerNumber == 2) {
+            [p1TimeLeft, p2TimeLeft] = [p2TimeLeft, p1TimeLeft];
+        }
+    }
+
+    function handleOpponent(updData) {
+        // console.log("lmao", updData);
+        let [garbage, gameBoard, changeTurn] = updData;
+        console.log(changeTurn);
+        if(garbage != 0) {
+            p1Board.gotSentGarbage(garbage);
+        }
+        if(changeTurn == 1) {
+            playerTurn = 3 - playerTurn;
+        }
+        p2Board = gameBoard;
+    }
+
+    function handleGameOver(data) {
         if (!gameActive) {
+            return;
+        }
+
+        data = JSON.parse(data);
+
+        if (data.winner === playerNumber) {
+            myScore++;
+            alert("You Win!");
+        } else {
+            theirScore++;
+            alert("You Lose :(");
+        }
+        
+        gameActive = false;
+        clearInterval(gameInterval);
+        handleScoreUpdate();
+
+        startBtn.style.display = "block";
+    }
+
+    //+++++++++++++ HANDLING INPUT +++++++++++++++++++++++++++++++++++++++++++++++
+
+    function keydown(e) {
+        if (!gameActive || playerNumber != playerTurn) {
             return;
         }
         if(keyIsDown[e.keyCode]) {
@@ -453,39 +1070,50 @@ var dd = (function (exports) {
         keyIsDown[e.keyCode] = true;
         let keyCode =  Object.keys(playerControls.controls).find(key => playerControls.controls[key] === e.keyCode);
         // console.log(keyCode);
+        let damage = 0;
         switch(keyCode) {
             case "hd":
-                socket.emit("addAction", ["hd", 0]);
+                damage = p1Board.hardDrop();    
+                p1Board.makeBoardObject(p1BoardSimple);
+                console.log("harddropped!");
+                socket.emit("newMove", [damage, p1BoardSimple]);
+                playerTurn = 3 - playerTurn;
                 break;
             case "sd":
-                socket.emit("addAction", ["sd", 1]);
+                p1Board.softDrop(1);
                 controlState.downCnt = 0;
                 controlState.downTime = Number(Date.now());
                 break;
             case "rcw":
-                socket.emit("addAction", ["rcw", 1]);
+                p1Board.rotatePiece(1);
                 break;
             case "r180":
-                socket.emit("addAction", ["rcw", 2]);
+                p1Board.rotatePiece(2);
                 break;
             case "rccw":
-                socket.emit("addAction", ["rcw", 3]);
+                p1Board.rotatePiece(3);
                 break;
             case "hold":
-                socket.emit("addAction", ["hold", 0]);
+                p1Board.holdPiece();
                 break;
             case "left":
-                socket.emit("addAction", ["left", 1]);
+                p1Board.moveSideways(1, -1);
                 controlState.dasDir = "left";
                 controlState.dasCnt = 0;
                 controlState.dasTime = Number(Date.now()) + playerControls.handling.das;
                 break;
             case "right":
-                socket.emit("addAction", ["right", 1]);
+                p1Board.moveSideways(1, 1);
                 controlState.dasDir = "right";
                 controlState.dasCnt = 0;
                 controlState.dasTime = Number(Date.now()) + playerControls.handling.das;
                 break;
+        }
+
+        if(p1Board.gameOver) {
+            p1Board.makeBoardObject(p1BoardSimple);
+            socket.emit("refreshBoard", JSON.stringify(p1BoardSimple));
+            socket.emit("toppedOut", _roomCode);
         }
         // console.log(controlState, "this happened");
     }
@@ -515,29 +1143,7 @@ var dd = (function (exports) {
         }
     }
 
-    function drawGame(state) {
-        drawHold(p1Hc, p1H, state.p1Board, state.p1TimeLeft);
-        drawBoard(p1Bc, p1B, state.p1Board, state.p1TimeLeft);
-        // console.log("PLEASE???");
-        drawQueue(p1Qc, p1Q, state.p1Board, state.p1TimeLeft);
-
-        drawHold(p2Hc, p2H, state.p2Board, state.p2TimeLeft);
-        drawBoard(p2Bc, p2B, state.p2Board, state.p2TimeLeft);
-        drawQueue(p2Qc, p2Q, state.p2Board, state.p2TimeLeft);
-    }
-
-    function handleInit(number, roomCode) {
-        playerNumber = number;
-        _roomCode = roomCode;
-        updateKeys(playerControls);
-    }
-
-    function handleGameState(gameState) {
-        if (!gameActive) {
-            return;
-        }
-        // console.log(1, controlState);
-        //horizontal movement
+    function continueInput() {
         let curTime = Number(Date.now()), timesDid;
         if(controlState.dasDir != "N" && controlState.dasTime < curTime) {
             timesDid = Math.floor((curTime - controlState.dasTime) / playerControls.handling.arr);
@@ -546,7 +1152,7 @@ var dd = (function (exports) {
         }
         // console.log(2, controlState);
         if(controlState.dasCnt) {
-            socket.emit("addAction", [controlState.dasDir, controlState.dasCnt]);
+            p1Board.moveSideways(controlState.dasCnt, controlState.dasDir == "left" ? -1 : 1);
             controlState.dasCnt = 0;
         }
 
@@ -558,35 +1164,30 @@ var dd = (function (exports) {
         }
         // console.log(3, controlState);
         if(controlState.downCnt) {
-            socket.emit("addAction", ["sd", controlState.downCnt]);
+            p1Board.softDrop(controlState.downCnt);
             controlState.downCnt = 0;
         }
-
-        //do more stuff
-        gameState = JSON.parse(gameState);
-        requestAnimationFrame(() => drawGame(gameState));
-        // requestAnimationFrame(() => console.log(gameState));
+        p1Board.makeBoardObject(p1BoardSimple);
     }
 
-    function handleGameOver(data) {
-        if (!gameActive) {
+    //++++++++++++++ DRAW GAME +++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    function drawGame() {
+        drawHold(p1Hc, p1H, p1Board, p1TimeLeft);
+        drawBoard(p1Bc, p1B, p1Board, p1TimeLeft);
+        // console.log("PLEASE???");
+        drawQueue(p1Qc, p1Q, p1Board, p1TimeLeft);
+
+        if(p2Board == null) {
             return;
         }
-        data = JSON.parse(data);
 
-        gameActive = false;
-
-        if (data.winner === playerNumber) {
-            myScore++;
-            alert("You Win!");
-        } else {
-            theirScore++;
-            alert("You Lose :(");
-        }
-
-        handleScoreUpdate();
-        startBtn.style.display = "block";
+        drawHold(p2Hc, p2H, p2Board, p2TimeLeft);
+        drawBoard(p2Bc, p2B, p2Board, p2TimeLeft);
+        drawQueue(p2Qc, p2Q, p2Board, p2TimeLeft);
     }
+
+    //+++++++++++ MISC +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
     function handleScoreUpdate() {
         playerScores.style.display = "block";
@@ -610,7 +1211,7 @@ var dd = (function (exports) {
     function reset() {
         playerNumber = null;
         roomCodeInput.value = "";
-        initialScreen.style.display = "block";
+        unhideElement(initialScreen);
         gameScreen.style.display = "none";
     }
 

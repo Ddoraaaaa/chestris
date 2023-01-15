@@ -168,7 +168,7 @@ export default class gameBoard {
             this.makePos(x, y, this.activePiece);
         }
         //check t spin
-        console.log(this.activePiece);
+        // console.log(this.activePiece);
         if(this.activePiece == 7) {
             this.isTSpin = 0;
             for(let [addX, addY] of TSPIN_CHECK) {

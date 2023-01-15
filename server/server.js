@@ -1,24 +1,25 @@
 import { Server } from "socket.io";
 import { createServer } from "http";
-import { initGame, gameLoop, updateEmittedState } from "./src/game/game.js";
 import { FRAME_RATE, CODE_LENGTH } from "./src/constants.js";
 import { makeId } from "./src/utils.js";
 
 const state = {};
-const emittedState = {};
 const clientRooms = {};
 const playerTurn = {};
 const timeAdd = {};
+const gameInterval = {};
 
 const httpServer = createServer();
 const io = new Server(httpServer, { /* options */ });
 
-io.on('connection', client => {
+io.on("connection", client => {
 
-    client.on('addAction', handleAction);
-    client.on('joinRoom', handleJoinRoom);
-    client.on('newRoom', handleNewRoom);
-    client.on('startGame', handleStartGame);
+    client.on("joinRoom", handleJoinRoom);
+    client.on("newRoom", handleNewRoom);
+    client.on("startGame", handleStartGame);
+    client.on("newMove", handleNewMove);
+    client.on("refreshBoard", handleRefresh);
+    client.on("toppedOut", handleTopOut);
 
     function handleJoinRoom(roomName) {
         // console.log(roomName)
@@ -37,10 +38,10 @@ io.on('connection', client => {
         }
 
         if (numClients === 0) {
-            client.emit('unknownCode');
+            client.emit("unknownCode");
             return;
         } else if (numClients > 1) {
-            client.emit('tooManyPlayers');
+            client.emit("tooManyPlayers");
             return;
         }
 
@@ -48,17 +49,17 @@ io.on('connection', client => {
 
         client.join(roomName);
         client.number = 2;
-        client.emit('init', 2, roomName);
+        client.emit("init", 2, roomName);
     }
 
     function handleNewRoom() {
         let roomName = makeId(CODE_LENGTH);
         clientRooms[client.id] = roomName;
-        client.emit('roomCode', roomName);
+        client.emit("roomCode", roomName);
 
         client.join(roomName);
         client.number = 1;
-        client.emit('init', 1, roomName);
+        client.emit("init", 1, roomName);
         // console.log(io.sockets.adapter.rooms)
         
         // console.log(state[roomName])
@@ -66,95 +67,69 @@ io.on('connection', client => {
 
     function handleStartGame(gameRules) {
         let [roomName, timeRule] = gameRules;
-        // console.log(roomName)
-        timeAdd[roomName] = timeRule[1];
-        // console.log("reached here");
-        [state[roomName], emittedState[roomName]] = initGame(timeRule);
-        playerTurn[roomName] = Math.floor(Math.random()*2)+1;
-        // console.log(playerTurn[roomName]);
-        // console.log("hi", state[roomName]);
         
+        io.in(roomName).emit("setTimeRules", timeRule);
+        // console.log(timeRule);
+        state[roomName] = {};
+        timeAdd[roomName] = Number(timeRule[1]);
+
+        playerTurn[roomName] = Math.floor(Math.random()*2)+1;
+        state[roomName].playerTime = new Array(2).fill(timeRule[0] * 1000);
+
         startGameInterval(roomName);
-        io.sockets.in(roomName)
-            .emit('initGame', roomName);
+        io.in(roomName).emit("initGame", playerTurn[roomName]);
     }
 
-    function handleAction(actions) {
+    function handleNewMove(moves) {
+        // console.log("new move!");
         const roomName = clientRooms[client.id];
-        if(client.number != playerTurn[roomName]) {
-            return;
-        }
-        let thisPlayer = state[roomName].p1Board;
-        let otherPlayer = state[roomName].p2Board;
-        if(client.number == 2) {
-            [thisPlayer, otherPlayer] = [otherPlayer, thisPlayer];
-        }
-        let [keyCode, timesDid] = actions;
-        // console.log(actions);
-        // let [keyCode, keyCode2] = keyCode1;
-        // console.log("hey", keyCode1);
-        switch(keyCode) {
-            case "hd":
-                let damageDealt = thisPlayer.hardDrop();
-                switch(client.number) {
-                    case 1:
-                        state[roomName].p1TimeLeft += timeAdd[roomName];
-                        break;
-                    case 2:
-                        state[roomName].p2TimeLeft += timeAdd[roomName];
-                        break;
-                }
-                // console.log(damageDealt);
-                if(damageDealt) {
-                    otherPlayer.gotSentGarbage(damageDealt);
-                }
-                playerTurn[roomName] = 3 - playerTurn[roomName];
-                break;
-            case "sd":
-                thisPlayer.softDrop(timesDid);
-                break;
-            case "rcw":
-                thisPlayer.rotatePiece(timesDid);
-                break;
-            case "hold":
-                thisPlayer.holdPiece();
-                break;
-            case "left":
-                thisPlayer.moveSideways(timesDid, -1);
-                break;
-            case "right":
-                thisPlayer.moveSideways(timesDid, 1);
-                break;
-        }
-        updateEmittedState(state[roomName], emittedState[roomName]);
+        let [garbage, gameBoard] = moves;
+        state[roomName].playerTime[client.number - 1]+= timeAdd[roomName];
+        playerTurn[roomName] = 3 - playerTurn[roomName];
+        client.to(roomName).emit("updFromOpponent", [garbage, gameBoard, 1]);
+        // console.log("new move :)");
+    }
+
+    function handleRefresh(board) {
+        const roomName = clientRooms[client.id];
+        const objBoard = JSON.parse(board);
+        client.to(roomName).emit("updFromOpponent", [0, objBoard, 0]);
+    }
+
+    function handleTopOut(roomName) {
+        // console.log("topped out!");
+        emitGameOver(roomName, 3 - client.number)
     }
 });
 
 function startGameInterval(roomName) {
-    const intervalId = setInterval(() => {
-        const winner = gameLoop(state[roomName], 1000 / FRAME_RATE, playerTurn[roomName]);
+    gameInterval[roomName] = setInterval(() => {
+        let winner = 0;
+        state[roomName].playerTime[playerTurn[roomName] - 1] = Math.max(
+            state[roomName].playerTime[playerTurn[roomName] - 1] - 1000 / FRAME_RATE,
+            0
+        ) 
+        if(state[roomName].playerTime[playerTurn[roomName] - 1] == 0) {
+            winner = 3 - playerTurn[roomName];
+        }
         // console.log(state[roomName]);
-        if (!winner) {
-            updateEmittedState(state[roomName], emittedState[roomName]);
-            emitGameState(roomName, emittedState[roomName])
-        } else {
-            updateEmittedState(state[roomName], emittedState[roomName]);
-            emitGameState(roomName, emittedState[roomName])
+        if(winner) {
             emitGameOver(roomName, winner);
-            state[roomName] = null;
-            clearInterval(intervalId);
+        }
+        else {
+            io.in(roomName).emit("updFromServer", state[roomName].playerTime);
         }
     }, 1000 / FRAME_RATE);
 }
 
-function emitGameState(room, gameState) {
-    io.sockets.in(room)
-        .emit('gameState', JSON.stringify(gameState));
-}
+function emitGameOver(roomName, winner) {
+    clearInterval(gameInterval[roomName]);
+    state[roomName] = {};
+    playerTurn[roomName] = null;
+    timeAdd[roomName] = null;
+    gameInterval[roomName] = null;
 
-function emitGameOver(room, winner) {
-    io.sockets.in(room)
-        .emit('gameOver', JSON.stringify({ winner }));
+    io.in(roomName).emit("gameOver", JSON.stringify({ winner }));
 }
 
 httpServer.listen(process.env.PORT || 3000);

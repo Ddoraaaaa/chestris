@@ -1,5 +1,6 @@
 export const CTRL_KEYS = ["das", "arr", "grav", "right", "left", "sd", "hd", "hold", "rcw", "rccw", "r180"];
 export const LMAO = "1";
+export const FRAME_RATE = 60;
 
 export const DEFAULT_CONTROLS = {
     handling: {

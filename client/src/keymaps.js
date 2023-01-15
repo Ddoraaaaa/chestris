@@ -42,12 +42,12 @@ export function applyHandling(gameHandling) {
 }
 
 export function mapKeys(frm) {
-    console.log(frm);
+    // console.log(frm);
     const formData = new FormData(frm);
     const formDataObj = Object.fromEntries(formData.entries());
 
-    console.log(formData.entries());
-    console.log(formDataObj);
+    // console.log(formData.entries());
+    // console.log(formDataObj);
 
     for(var key in formDataObj) {
         if(formDataObj[key]) {

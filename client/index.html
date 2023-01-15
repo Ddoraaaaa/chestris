@@ -65,12 +65,10 @@
                         <canvas class="d-inline-block" id="p2QueueCv" sttle="image-rendering: pixelated"></canvas>
                     </div>
                     <p id="roomCodeDisplay">Room number: <span id="roomCodeText"></span></p>
-                    <form action="" method="get" class="d-none form-example justify-content-between">
-                        <h2>Controls</h2>
-                        <p>Press any key to change binding. Esc to cancel</p>
+                    <form id="gameRuleForm" method="get" class="form-example justify-content-between">
+                        <h3>Rules</h2>
                         <label class="input-block">Initial time (s)</label><input class="input-block" name="initime" type="number" max="60" min="1" placeholder="30" onkeyup="dd.utils.enforceMinMax(this)"/><br>
                         <label class="input-block">Added time (ms)</label><input class="input-block" name="addtime" type="number" max="1000" min="0" placeholder="500" onkeyup="dd.utils.enforceMinMax(this)"/><br>
-                        <button type="button" class="btn btn-secondary d-inline" onclick="dd.keymaps.mapKeys(this.form)">Save</button>
                     </form>
                     <button class="btn btn-secondary" id="startButton">Start</button>
                 </div>
