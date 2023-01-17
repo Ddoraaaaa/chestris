@@ -46,8 +46,8 @@
                     <label class="input-block">Rotate CW</label>     <input class="input-block" name="rcw" type="text" placeholder="up arrow" onkeydown="dd.keymaps.rgKeyDown(this, event)" onkeyup="dd.keymaps.rgKeyUp(this, event)"/><br>
                     <label class="input-block">Rotate CCW</label>    <input class="input-block" name="rccw" type="text" onkeydown="dd.keymaps.rgKeyDown(this, event)" onkeyup="dd.keymaps.rgKeyUp(this, event)"/><br>
                     <label class="input-block">Rotate 180</label>    <input class="input-block" name="r180" type="text" onkeydown="dd.keymaps.rgKeyDown(this, event)" onkeyup="dd.keymaps.rgKeyUp(this, event)"/><br>
-                    <button type="button" class="btn btn-secondary d-inline" onclick="dd.keymaps.mapKeys(this.form)">Save</button>
-                    <button type="button" class="btn btn-secondary d-inline" onclick="dd.keymaps.resetKeys()">Reset</button>
+                    <button type="button" class="btn btn-secondary d-inline" onclick="dd.keymaps.mapKeys(this.form, dd.playerControls)">Save</button>
+                    <button type="button" class="btn btn-secondary d-inline" onclick="dd.keymaps.resetKeys(dd.playerControls)">Reset</button>
                 </form>
             </div>
 

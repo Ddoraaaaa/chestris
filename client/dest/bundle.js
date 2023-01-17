@@ -1,7 +1,11 @@
 var dd = (function (exports) {
     'use strict';
 
-    const CTRL_KEYS = ["das", "arr", "grav", "right", "left", "sd", "hd", "hold", "rcw", "rccw", "r180"];
+    const CTRL_KEYS = {
+        handling: ["das", "arr", "grav"],
+        controls: ["right", "left", "sd", "hd", "hold", "rcw", "rccw", "r180"]
+    };
+
     const LMAO = "1";
     const FRAME_RATE$1 = 60;
 
@@ -12,12 +16,12 @@ var dd = (function (exports) {
             grav: 50,
         },
         controls: {
-            left: 37,
-            right: 39,
-            sd: 40,
-            hd: 32,
-            hold: 67,
-            rcw: 38,
+            left: "ArrowLeft",
+            right: "ArrowRight",
+            sd: "ArrowDown",
+            hd: "Space",
+            hold: "KeyC",
+            rcw: "ArrowUp",
             rccw: -1,
             r180: -1
         }
@@ -165,30 +169,30 @@ var dd = (function (exports) {
         unhideElement: unhideElement
     });
 
-    function updateKeys(playerControls) {
-        const savedControls = getCookie();
-        console.log(savedControls, 69);
-        for (const [x, y] of Object.entries(savedControls)) {
-            switch(x) {
-                case "das":
-                case "arr":
-                case "grav":
-                    playerControls.handling[x] = Number(y);
-                    // console.log(x, "is handling");
-                    break;
-                default:
-                    playerControls.controls[x] = Number(y);
-                    // console.log(x, "is not handling");
-            }
-        }
-    }
+    // export function updateKeys(playerControls) {
+    //     const savedControls = utils.getCookie();
+    //     console.log(savedControls, 69);
+    //     for (const [x, y] of Object.entries(savedControls)) {
+    //         switch(x) {
+    //             case "das":
+    //             case "arr":
+    //             case "grav":
+    //                 playerControls.handling[x] = Number(y);
+    //                 // console.log(x, "is handling");
+    //                 break;
+    //             default:
+    //                 playerControls.controls[x] = y;
+    //                 // console.log(x, "is not handling");
+    //         }
+    //     }
+    // }
 
     function rgKeyDown(elem, event) {
-        if(event.keyCode == 27) {
+        if(event.keyCode == "Tab") {
             elem.value="";
             return;
         }
-        elem.value=event.keyCode;
+        elem.value=event.code;
         elem.readOnly=true;
     }
 
@@ -198,14 +202,30 @@ var dd = (function (exports) {
 
     function applyHandling(gameHandling) {
         var cookieObj = getCookie();
-        for(let key of CTRL_KEYS) {
+        for(let key of CTRL_KEYS.handling) {
             if(cookieObj[key]) {
-                gameHandling[key] = Number(cookieObj[key]);
+                console.log(key, "vai cac", cookieObj[key], gameHandling);
+                gameHandling.handling[key] = Number(cookieObj[key]);
+                document.getElementsByName(key)[0].value = cookieObj[key];
+            }
+            else {
+                gameHandling.handling[key] = DEFAULT_CONTROLS.handling[key];
+                document.getElementsByName(key)[0].value = "";
+            }
+        }
+        for(let key of CTRL_KEYS.controls) {
+            if(cookieObj[key]) {
+                gameHandling.controls[key] = cookieObj[key];
+                document.getElementsByName(key)[0].value = cookieObj[key];
+            }
+            else {
+                gameHandling.controls[key] = DEFAULT_CONTROLS.controls[key];
+                document.getElementsByName(key)[0].value = "";
             }
         }
     }
 
-    function mapKeys(frm) {
+    function mapKeys(frm, gameHandling) {
         // console.log(frm);
         const formData = new FormData(frm);
         const formDataObj = Object.fromEntries(formData.entries());
@@ -218,12 +238,17 @@ var dd = (function (exports) {
                 setCookie(key, formDataObj[key], 0);
             }
         }
+        applyHandling(gameHandling);
     }
 
-    function resetKeys() {
-        for(var key of CTRL_KEYS) {
+    function resetKeys(gameHandling) {
+        for(var key of CTRL_KEYS.handling) {
             setCookie(key, 1234, 1);
         }
+        for(var key of CTRL_KEYS.controls) {
+            setCookie(key, 1234, 1);
+        }
+        applyHandling(gameHandling);
     }
 
     var keymaps = /*#__PURE__*/Object.freeze({
@@ -232,8 +257,7 @@ var dd = (function (exports) {
         mapKeys: mapKeys,
         resetKeys: resetKeys,
         rgKeyDown: rgKeyDown,
-        rgKeyUp: rgKeyUp,
-        updateKeys: updateKeys
+        rgKeyUp: rgKeyUp
     });
 
     function drawMino(ctx, canvas, x, y, pieceId) {
@@ -954,8 +978,13 @@ var dd = (function (exports) {
         downCnt: 0,
         downTime: null,
     };
-    const keyIsDown = Array(200).fill(0);
+    const keyIsDown = {};
     let timeRule = JSON.parse(JSON.stringify(DEFAULT_TIMERULE));
+
+    // +++++++++++++++++ ACTION ON STARTUP +++++++++++++++++++++++++++++++++++++++
+
+    applyHandling(playerControls);
+    console.log("dit me", playerControls);
 
     //+++++++++++++++++ INITIALIZE +++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -989,7 +1018,7 @@ var dd = (function (exports) {
     function handleInit(number, roomCode) {
         playerNumber = number;
         _roomCode = roomCode;
-        updateKeys(playerControls);
+        applyHandling(playerControls);
     }
 
     //Initialize * game *
@@ -1079,17 +1108,18 @@ var dd = (function (exports) {
     //+++++++++++++ HANDLING INPUT +++++++++++++++++++++++++++++++++++++++++++++++
 
     function keydown(e) {
+        console.log(e.key);
         if (!gameActive || playerNumber != playerTurn) {
             return;
         }
-        if(keyIsDown[e.keyCode]) {
+        if(keyIsDown[e.code] === true) {
             return;
         }
-        keyIsDown[e.keyCode] = true;
-        let keyCode =  Object.keys(playerControls.controls).find(key => playerControls.controls[key] === e.keyCode);
-        // console.log(keyCode);
+        keyIsDown[e.code] = true;
+        let code =  Object.keys(playerControls.controls).find(key => playerControls.controls[key] == e.code);
+        // console.log(code);
         let damage = 0;
-        switch(keyCode) {
+        switch(code) {
             case "hd":
                 damage = p1Board.hardDrop();    
                 p1Board.makeBoardObject(p1BoardSimple);
@@ -1140,9 +1170,10 @@ var dd = (function (exports) {
         if (!gameActive) {
             return;
         }
-        keyIsDown[e.keyCode] = false;
-        let keyCode =  Object.keys(playerControls.controls).find(key => playerControls.controls[key] === e.keyCode);    
-        switch(keyCode) {
+        keyIsDown[e.code] = false;
+        let code =  Object.keys(playerControls.controls).find(key => playerControls.controls[key] === e.code);  
+        console.log("fucking", code);  
+        switch(code) {
             case "sd":
                 controlState.downTime = null;
                 break;
@@ -1235,6 +1266,7 @@ var dd = (function (exports) {
 
     exports.constants = constants;
     exports.keymaps = keymaps;
+    exports.playerControls = playerControls;
     exports.utils = utils;
 
     return exports;

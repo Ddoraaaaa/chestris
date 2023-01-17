@@ -83,7 +83,7 @@ let p1BoardSimple;
 
 // +++++++++++++++++ CONTROLS ++++++++++++++++++++++++++++++++++++++++++++++++
 
-const playerControls = JSON.parse(JSON.stringify(constants.DEFAULT_CONTROLS));
+export const playerControls = JSON.parse(JSON.stringify(constants.DEFAULT_CONTROLS));
 const controlState = {
     dasCnt: 0,
     dasDir: "N",
@@ -92,8 +92,13 @@ const controlState = {
     downCnt: 0,
     downTime: null,
 }
-const keyIsDown = Array(200).fill(0);
+const keyIsDown = {};
 let timeRule = JSON.parse(JSON.stringify(constants.DEFAULT_TIMERULE));
+
+// +++++++++++++++++ ACTION ON STARTUP +++++++++++++++++++++++++++++++++++++++
+
+keymaps.applyHandling(playerControls);
+console.log("dit me", playerControls);
 
 //+++++++++++++++++ INITIALIZE +++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -127,7 +132,7 @@ function init() {
 function handleInit(number, roomCode) {
     playerNumber = number;
     _roomCode = roomCode;
-    keymaps.updateKeys(playerControls);
+    keymaps.applyHandling(playerControls);
 }
 
 //Initialize * game *
@@ -217,17 +222,18 @@ function handleGameOver(data) {
 //+++++++++++++ HANDLING INPUT +++++++++++++++++++++++++++++++++++++++++++++++
 
 function keydown(e) {
+    console.log(e.key);
     if (!gameActive || playerNumber != playerTurn) {
         return;
     }
-    if(keyIsDown[e.keyCode]) {
+    if(keyIsDown[e.code] === true) {
         return;
     }
-    keyIsDown[e.keyCode] = true;
-    let keyCode =  Object.keys(playerControls.controls).find(key => playerControls.controls[key] === e.keyCode);
-    // console.log(keyCode);
+    keyIsDown[e.code] = true;
+    let code =  Object.keys(playerControls.controls).find(key => playerControls.controls[key] == e.code);
+    // console.log(code);
     let damage = 0;
-    switch(keyCode) {
+    switch(code) {
         case "hd":
             damage = p1Board.hardDrop();    
             p1Board.makeBoardObject(p1BoardSimple);
@@ -278,9 +284,10 @@ function keyup(e) {
     if (!gameActive) {
         return;
     }
-    keyIsDown[e.keyCode] = false;
-    let keyCode =  Object.keys(playerControls.controls).find(key => playerControls.controls[key] === e.keyCode);    
-    switch(keyCode) {
+    keyIsDown[e.code] = false;
+    let code =  Object.keys(playerControls.controls).find(key => playerControls.controls[key] === e.code);  
+    console.log("fucking", code);  
+    switch(code) {
         case "sd":
             controlState.downTime = null;
             break;

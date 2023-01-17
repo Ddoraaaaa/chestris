@@ -1,4 +1,8 @@
-export const CTRL_KEYS = ["das", "arr", "grav", "right", "left", "sd", "hd", "hold", "rcw", "rccw", "r180"];
+export const CTRL_KEYS = {
+    handling: ["das", "arr", "grav"],
+    controls: ["right", "left", "sd", "hd", "hold", "rcw", "rccw", "r180"]
+};
+
 export const LMAO = "1";
 export const FRAME_RATE = 60;
 
@@ -9,12 +13,12 @@ export const DEFAULT_CONTROLS = {
         grav: 50,
     },
     controls: {
-        left: 37,
-        right: 39,
-        sd: 40,
-        hd: 32,
-        hold: 67,
-        rcw: 38,
+        left: "ArrowLeft",
+        right: "ArrowRight",
+        sd: "ArrowDown",
+        hd: "Space",
+        hold: "KeyC",
+        rcw: "ArrowUp",
         rccw: -1,
         r180: -1
     }
