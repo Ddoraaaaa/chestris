@@ -1063,10 +1063,10 @@ var dd = (function (exports) {
 
         if (data.winner === playerNumber) {
             myScore++;
-            alert("You Win!");
+            // alert("You Win!");
         } else {
             theirScore++;
-            alert("You Lose :(");
+            // alert("You Lose :(");
         }
         
         gameActive = false;

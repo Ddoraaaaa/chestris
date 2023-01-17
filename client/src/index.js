@@ -201,10 +201,10 @@ function handleGameOver(data) {
 
     if (data.winner === playerNumber) {
         myScore++;
-        alert("You Win!");
+        // alert("You Win!");
     } else {
         theirScore++;
-        alert("You Lose :(");
+        // alert("You Lose :(");
     }
     
     gameActive = false;
