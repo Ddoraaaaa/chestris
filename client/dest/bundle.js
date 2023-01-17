@@ -263,7 +263,7 @@ var dd = (function (exports) {
         ctx.restore();
     }
 
-    function drawHold(ctx, canvas, state, timeLeft) {
+    function drawHold(ctx, canvas, state, timeLeft, isPlayerTurn) {
         ctx.fillStyle = BOARD_BACKGROUND$1;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         // ctx.fillRect(CV_PAD / 2, CV_PAD / 2, canvas.width - CV_PAD, canvas.height - CV_PAD);
@@ -274,6 +274,13 @@ var dd = (function (exports) {
         ctx.restore();
         ctx.save();
             ctx.translate(0, MINO_SIZE * 5);
+            if(isPlayerTurn) {
+                ctx.save();
+                ctx.fillStyle = "green";
+                ctx.fillRect(5, 35, 130, 35);
+                ctx.restore();
+            }
+            //timer color
             ctx.fillStyle = "white";
             ctx.font = "24px Courier";
             if(state.backToBack > 1) {
@@ -286,8 +293,11 @@ var dd = (function (exports) {
             ctx.translate(0, 30);
             let minutes = Math.floor(timeLeft / 1000 / 60);
             let seconds = Math.floor(timeLeft / 1000) % 60;
-            let miliseconds = Math.floor(timeLeft / 10) % 100;
-            ctx.fillText(`${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}:${String(miliseconds).padStart(2, '0')}`, 10, 0);
+            let miliseconds = Math.floor(timeLeft / 10);
+            if(miliseconds % 100 < 50 && miliseconds < 1000 && isPlayerTurn) {
+                ctx.fillStyle = "gray";
+            }
+            ctx.fillText(`${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}:${String(miliseconds % 100).padStart(2, '0')}`, 10, 0);
         ctx.restore();
     }
 
@@ -1181,7 +1191,7 @@ var dd = (function (exports) {
     //++++++++++++++ DRAW GAME +++++++++++++++++++++++++++++++++++++++++++++++++++
 
     function drawGame() {
-        drawHold(p1Hc, p1H, p1Board, p1TimeLeft);
+        drawHold(p1Hc, p1H, p1Board, p1TimeLeft, (playerTurn == playerNumber));
         drawBoard(p1Bc, p1B, p1Board, p1TimeLeft);
         // console.log("PLEASE???");
         drawQueue(p1Qc, p1Q, p1Board, p1TimeLeft);
@@ -1190,7 +1200,7 @@ var dd = (function (exports) {
             return;
         }
 
-        drawHold(p2Hc, p2H, p2Board, p2TimeLeft);
+        drawHold(p2Hc, p2H, p2Board, p2TimeLeft, (playerTurn != playerNumber));
         drawBoard(p2Bc, p2B, p2Board, p2TimeLeft);
         drawQueue(p2Qc, p2Q, p2Board, p2TimeLeft);
     }

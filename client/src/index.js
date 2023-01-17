@@ -329,7 +329,7 @@ function continueInput() {
 //++++++++++++++ DRAW GAME +++++++++++++++++++++++++++++++++++++++++++++++++++
 
 function drawGame() {
-    drawHold(p1Hc, p1H, p1Board, p1TimeLeft);
+    drawHold(p1Hc, p1H, p1Board, p1TimeLeft, (playerTurn == playerNumber));
     drawBoard(p1Bc, p1B, p1Board, p1TimeLeft);
     // console.log("PLEASE???");
     drawQueue(p1Qc, p1Q, p1Board, p1TimeLeft);
@@ -338,7 +338,7 @@ function drawGame() {
         return;
     }
 
-    drawHold(p2Hc, p2H, p2Board, p2TimeLeft);
+    drawHold(p2Hc, p2H, p2Board, p2TimeLeft, (playerTurn != playerNumber));
     drawBoard(p2Bc, p2B, p2Board, p2TimeLeft);
     drawQueue(p2Qc, p2Q, p2Board, p2TimeLeft);
 }
