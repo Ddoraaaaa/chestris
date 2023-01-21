@@ -24,7 +24,7 @@ export const DEFAULT_CONTROLS = {
     }
 }
 
-export const DEFAULT_TIMERULE = Object.freeze([30, 500]);
+export const DEFAULT_TIMERULE = Object.freeze([30, 700]);
 
 //BOARD AND GAMEFIELD
 
@@ -47,7 +47,8 @@ export const PIECE_COLOR = [   BOARD_BACKGROUND,  //none
                         "#109BD7",  //sky blue  I
                         "#E39F00",  //yellow    O  
                         "#AF2989",  //purple    T
-                        "#909090"]; //gray      garbage
+                        "#909090",  //gray      garbage
+                        "#505050"]; //dark gray solid
 
 export const PIECE_POSITION = [
     [],                                       //                     No piece

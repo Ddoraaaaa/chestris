@@ -27,7 +27,7 @@ var dd = (function (exports) {
         }
     };
 
-    const DEFAULT_TIMERULE = Object.freeze([30, 500]);
+    const DEFAULT_TIMERULE = Object.freeze([30, 700]);
 
     //BOARD AND GAMEFIELD
 
@@ -50,7 +50,8 @@ var dd = (function (exports) {
                             "#109BD7",  //sky blue  I
                             "#E39F00",  //yellow    O  
                             "#AF2989",  //purple    T
-                            "#909090"]; //gray      garbage
+                            "#909090",  //gray      garbage
+                            "#505050"]; //dark gray solid
 
     const PIECE_POSITION$1 = [
         [],                                       //                     No piece
@@ -160,12 +161,41 @@ var dd = (function (exports) {
         }
     }
 
+    function enforceMinMaxLock(elem, watchInput, secondInput) {
+        if (elem.value != "") {
+            if (parseInt(elem.value) < parseInt(elem.min)) {
+                elem.value = elem.min;
+            }
+            if (parseInt(elem.value) > parseInt(elem.max)) {
+                elem.value = elem.max;
+            }
+        }
+        if($("#" + watchInput).hasClass("active")) {
+            $("[name=" + secondInput + "]").val(elem.value);
+        }
+    }
+
+    const toggleButton = (elemId, lockedElemId) => {
+        elemId = "#" + elemId;
+        console.log(elemId);
+        if($(elemId).hasClass("active") == false) {
+            $(elemId).addClass("active");
+            $("[name=" + lockedElemId + "]").prop("readonly", true);
+        }
+        else {
+            $(elemId).removeClass("active");
+            $("[name=" + lockedElemId + "]").prop("readonly", false);
+        }
+    };
+
     var utils = /*#__PURE__*/Object.freeze({
         __proto__: null,
         enforceMinMax: enforceMinMax,
+        enforceMinMaxLock: enforceMinMaxLock,
         getCookie: getCookie,
         hideElement: hideElement,
         setCookie: setCookie,
+        toggleButton: toggleButton,
         unhideElement: unhideElement
     });
 
@@ -486,11 +516,13 @@ var dd = (function (exports) {
     const PC_DMG = 10;
 
     class gameBoard {
-        // 0:none 1:L 2:J 3:S 4:Z 5:I 6:O 7:T 8:garbage
+        // 0:none 1:L 2:J 3:S 4:Z 5:I 6:O 7:T 8:garbage 9:solid
         // board: 1->40:D->U then 1->10:L->R 
-        constructor(bagSize) {
+        constructor(bagSize, solidHeight) {
             //the actual board
-            this.board = new Array(BOARD_HEIGHT + 1).fill("0000000000");
+            this.solidHeight = solidHeight;
+            this.board = [  ...new Array(solidHeight + 1).fill("9999999999"),
+                            ...new Array(BOARD_HEIGHT - solidHeight).fill("0000000000")];
             this.boardMask = new Array(BOARD_HEIGHT + 1).fill(0);
 
             //things around the board
@@ -714,7 +746,7 @@ var dd = (function (exports) {
 
         checkPos = (i, j) => {
             // console.log(i, j);
-            if(i < 1 || j < 1 || i > BOARD_HEIGHT || j > BOARD_WIDTH) return true;
+            if(i < this.solidHeight + 1 || j < 1 || i > BOARD_HEIGHT || j > BOARD_WIDTH) return true;
             return (this.boardMask[i] >> (j - 1)) & 1;
         }
 
@@ -800,7 +832,7 @@ var dd = (function (exports) {
 
             //damage for perfect clear
             
-            if(this.boardMask[1] == 0) {
+            if(this.boardMask[this.solidHeight + 1] == 0) {
                 // console.log("has pc");
                 res += PC_DMG;
             }
@@ -817,8 +849,8 @@ var dd = (function (exports) {
         //add the next garbage in queue
         addGarbage = () => {
             if(this.garbageQueue.len == 0) return;
-            const paddingLine = this.board.shift();
-            this.boardMask.shift();
+            // const paddingLine = this.board.shift();
+            // this.boardMask.shift();
             const nextGarbage = this.garbageQueue.shift();
             const garbagePos = Math.floor(Math.random() * BOARD_WIDTH);
             let garbage = "", garbageMask = 0;
@@ -833,11 +865,11 @@ var dd = (function (exports) {
                 }
             }
             for(let i = 0; i < nextGarbage; i++) {
-                this.board.unshift(garbage);
-                this.boardMask.unshift(garbageMask);
+                this.board.splice(this.solidHeight + 1, 0, garbage);
+                // this.board.unshift(garbage);
+                // this.boardMask.unshift(garbageMask);
+                this.boardMask.splice(this.solidHeight + 1, 0, garbageMask);
             }
-            this.board.unshift(paddingLine);
-            this.boardMask.unshift(0);
             this.resizeBoard();
             // console.log(this.board);
             // console.log(this.boardMask);
@@ -893,7 +925,7 @@ var dd = (function (exports) {
     }
 
     const socket = io(
-                        // "http://localhost:3000" || 
+                        "http://localhost:3000" || 
                         "https://chestris.herokuapp.com/", {
         transports: ["websocket", "polling", "flashsocket"],
     });
@@ -906,7 +938,8 @@ var dd = (function (exports) {
     socket.on("roomCode", handleRoomCode);
     socket.on("unknownCode", handleUnknownCode);
     socket.on("tooManyPlayers", handleTooManyPlayers);
-    socket.on("setTimeRules", setTimeRule);
+    // socket.on("setTimeRules", setTimeRule);
+    socket.on("p2JoinGame", handleNewPlayer);
 
     const gameScreen = document.getElementById("gameScreen");
     const initialScreen = document.getElementById("initialScreen");
@@ -917,7 +950,6 @@ var dd = (function (exports) {
 
     const roomCodeInput = document.getElementById("roomCodeInput");
 
-    const roomCodeDisplay = document.getElementById("roomCodeDisplay");
     const roomCodeText = document.getElementById("roomCodeText");
     const gameTimeRule = document.getElementById("gameRuleForm");
 
@@ -931,11 +963,15 @@ var dd = (function (exports) {
     startBtn.addEventListener("click", startGame);
 
     function newRoom() {
+        $("#gameRuleForm").hide();
+        $("#startButton").hide();
         socket.emit("newRoom");
         init();
     }
 
     function joinRoom() {
+        $("#gameRuleForm").hide();
+        $("#startButton").hide();
         _roomCode = roomCodeInput.value;
         socket.emit("joinRoom", _roomCode);
         handleRoomCode(_roomCode);
@@ -943,16 +979,22 @@ var dd = (function (exports) {
     }
 
     function startGame() {
-        const formData = new FormData(document.forms.namedItem("gameRuleForm"));
-        const formDataObj = Object.fromEntries(formData.entries());
-        if(formDataObj.initime) {
-            timeRule[0] = formDataObj.initime;
-        }
-        if(formDataObj.addtime) {
-            timeRule[1] = formDataObj.addtime;
-        }
         // console.log("pressed");
-        socket.emit("startGame", [_roomCode, timeRule]);
+        socket.emit("startGame",    [
+                                        _roomCode,
+                                        [
+                                            Number($("[name=initime1]").val()) || 30,
+                                            Number($("[name=initime2]").val()) || 30,
+                                        ],
+                                        [
+                                            Number($("[name=addtime1]").val()) || 500,
+                                            Number($("[name=addtime2]").val()) || 500,
+                                        ],
+                                        [
+                                            Number($("[name=solgar1]").val()) || 0,
+                                            Number($("[name=solgar2]").val()) || 0,
+                                        ]
+                                    ]);
         // console.log("pressed");
     }
 
@@ -960,7 +1002,7 @@ var dd = (function (exports) {
     let p1Hc, p1Bc, p1Qc;
     let p2H, p2B, p2Q;
     let p2Hc, p2Bc, p2Qc;
-    let playerNumber, playerTurn;
+    let playerNumber, playerTurn, solGar;
     let gameActive = false;
 
     let gameInterval;
@@ -979,12 +1021,12 @@ var dd = (function (exports) {
         downTime: null,
     };
     const keyIsDown = {};
-    let timeRule = JSON.parse(JSON.stringify(DEFAULT_TIMERULE));
+    // let timeRule = JSON.parse(JSON.stringify(constants.DEFAULT_TIMERULE));
 
     // +++++++++++++++++ ACTION ON STARTUP +++++++++++++++++++++++++++++++++++++++
 
     applyHandling(playerControls);
-    console.log("dit me", playerControls);
+    // console.log("dit me", playerControls);
 
     //+++++++++++++++++ INITIALIZE +++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -994,6 +1036,7 @@ var dd = (function (exports) {
 
         hideElement(initialScreen);
         gameScreen.style.display = "block";
+        // if(player)
 
         p1H = document.getElementById("p1HoldCv"); p1Hc = p1H.getContext("2d");
         p1B = document.getElementById("p1BoardCv"); p1Bc = p1B.getContext("2d");
@@ -1017,20 +1060,26 @@ var dd = (function (exports) {
     //Initialize * match *
     function handleInit(number, roomCode) {
         playerNumber = number;
+        if(playerNumber == 2) {
+            $("#placeholderJoin").text("Please wait for player 1 to start the game");
+            $("#gameRuleForm").hide();
+            $("#startButton").hide();
+        }
+        console.log("hey hi hello");
         _roomCode = roomCode;
         applyHandling(playerControls);
     }
 
     //Initialize * game *
-    function handleInitGame(plrTrn) {
-        playerTurn = plrTrn;
+    function handleInitGame(params) {
+        [playerTurn, solGar] = params;
         // console.log("lmao");
-        roomCodeDisplay.style.display = "none";
+        $("#placeholderJoin").hide();
         gameTimeRule.style.display = "none";
         startBtn.style.display = "none";
         
         //init game boards;
-        p1Board = new gameBoard(7);
+        p1Board = new gameBoard(7, solGar);
         p1BoardSimple = {};
         p1Board.makeBoardObject(p1BoardSimple);
         p2Board = null;
@@ -1043,9 +1092,16 @@ var dd = (function (exports) {
         gameActive = true;
     }
 
-    function setTimeRule(timeRules) {
-        timeRule = timeRules;
+    function handleNewPlayer() {
+        alert("Player 2 joined!");
+        $("#startButton").show();
+        $("#gameRuleForm").show();
+        $("#placeholderJoin").text("Rules");
     }
+
+    // function setTimeRule(timeRules) {
+    //     timeRule = timeRules;
+    // }
 
     //++++++++++++++ GAME INTERVAL +++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -1102,7 +1158,9 @@ var dd = (function (exports) {
         clearInterval(gameInterval);
         handleScoreUpdate();
 
-        startBtn.style.display = "block";
+        if(playerNumber == 1) {
+            $("#startButton").show();
+        }
     }
 
     //+++++++++++++ HANDLING INPUT +++++++++++++++++++++++++++++++++++++++++++++++
@@ -1244,7 +1302,7 @@ var dd = (function (exports) {
     }
 
     function handleRoomCode(roomCode) {
-        roomCodeText.innerText = roomCode;
+        roomCodeText.innerText = `Room code: ${roomCode}`;
     }
 
     function handleUnknownCode() {

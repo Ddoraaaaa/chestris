@@ -1,11 +1,13 @@
 import { B2B_DMG, BOARD_HEIGHT, BOARD_WIDTH, COMBO_DMG, LINE_DMG, PC_DMG, PIECE_POSITION, PIECE_SPAWN, PREVIEW_QUEUE, ROTATION_OFFSET, TSPIN_CHECK, TSPIN_DMG } from "./constants";
 
 export default class gameBoard {
-    // 0:none 1:L 2:J 3:S 4:Z 5:I 6:O 7:T 8:garbage
+    // 0:none 1:L 2:J 3:S 4:Z 5:I 6:O 7:T 8:garbage 9:solid
     // board: 1->40:D->U then 1->10:L->R 
-    constructor(bagSize) {
+    constructor(bagSize, solidHeight) {
         //the actual board
-        this.board = new Array(BOARD_HEIGHT + 1).fill("0000000000");
+        this.solidHeight = solidHeight;
+        this.board = [  ...new Array(solidHeight + 1).fill("9999999999"),
+                        ...new Array(BOARD_HEIGHT - solidHeight).fill("0000000000")];
         this.boardMask = new Array(BOARD_HEIGHT + 1).fill(0);
 
         //things around the board
@@ -229,7 +231,7 @@ export default class gameBoard {
 
     checkPos = (i, j) => {
         // console.log(i, j);
-        if(i < 1 || j < 1 || i > BOARD_HEIGHT || j > BOARD_WIDTH) return true;
+        if(i < this.solidHeight + 1 || j < 1 || i > BOARD_HEIGHT || j > BOARD_WIDTH) return true;
         return (this.boardMask[i] >> (j - 1)) & 1;
     }
 
@@ -315,7 +317,7 @@ export default class gameBoard {
 
         //damage for perfect clear
         
-        if(this.boardMask[1] == 0) {
+        if(this.boardMask[this.solidHeight + 1] == 0) {
             // console.log("has pc");
             res += PC_DMG;
         }
@@ -332,8 +334,8 @@ export default class gameBoard {
     //add the next garbage in queue
     addGarbage = () => {
         if(this.garbageQueue.len == 0) return;
-        const paddingLine = this.board.shift();
-        this.boardMask.shift();
+        // const paddingLine = this.board.shift();
+        // this.boardMask.shift();
         const nextGarbage = this.garbageQueue.shift();
         const garbagePos = Math.floor(Math.random() * BOARD_WIDTH);
         let garbage = "", garbageMask = 0;
@@ -348,11 +350,11 @@ export default class gameBoard {
             }
         }
         for(let i = 0; i < nextGarbage; i++) {
-            this.board.unshift(garbage);
-            this.boardMask.unshift(garbageMask);
+            this.board.splice(this.solidHeight + 1, 0, garbage);
+            // this.board.unshift(garbage);
+            // this.boardMask.unshift(garbageMask);
+            this.boardMask.splice(this.solidHeight + 1, 0, garbageMask);
         }
-        this.board.unshift(paddingLine);
-        this.boardMask.unshift(0);
         this.resizeBoard();
         // console.log(this.board);
         // console.log(this.boardMask);

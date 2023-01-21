@@ -50,6 +50,7 @@ io.on("connection", client => {
         client.join(roomName);
         client.number = 2;
         client.emit("init", 2, roomName);
+        client.to(roomName).emit("p2JoinGame");
     }
 
     function handleNewRoom() {
@@ -66,25 +67,26 @@ io.on("connection", client => {
     }
 
     function handleStartGame(gameRules) {
-        let [roomName, timeRule] = gameRules;
+        let [roomName, iniTime, addTime, solGar] = gameRules;
         
-        io.in(roomName).emit("setTimeRules", timeRule);
+        // io.in(roomName).emit("setTimeRules", timeRule);
         // console.log(timeRule);
         state[roomName] = {};
-        timeAdd[roomName] = Number(timeRule[1]);
+        timeAdd[roomName] = addTime;
 
         playerTurn[roomName] = Math.floor(Math.random()*2)+1;
-        state[roomName].playerTime = new Array(2).fill(timeRule[0] * 1000);
+        state[roomName].playerTime = [iniTime[0] * 1000, iniTime[1] * 1000];
 
         startGameInterval(roomName);
-        io.in(roomName).emit("initGame", playerTurn[roomName]);
+        client.to(roomName).emit("initGame", [playerTurn[roomName], solGar[1]]);
+        client.emit("initGame", [playerTurn[roomName], solGar[0]]);
     }
 
     function handleNewMove(moves) {
         // console.log("new move!");
         const roomName = clientRooms[client.id];
         let [garbage, gameBoard] = moves;
-        state[roomName].playerTime[client.number - 1]+= timeAdd[roomName];
+        state[roomName].playerTime[client.number - 1]+= timeAdd[roomName][client.number - 1];
         playerTurn[roomName] = 3 - playerTurn[roomName];
         client.to(roomName).emit("updFromOpponent", [garbage, gameBoard, 1]);
         // console.log("new move :)");

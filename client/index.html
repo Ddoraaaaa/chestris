@@ -4,13 +4,17 @@
     <meta charset="UTF-8">
     <title>Chestris</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
 
     <style>
     #gameScreen, #playerScores {
         display: none;
     }
     .input-block {
-        width: 200px;
+        width: 150px;
+    }
+    .game-rule-label {
+        width: 180px;
     }
     </style>
 </head>
@@ -64,11 +68,39 @@
                         <canvas class="d-inline-block" id="p2BoardCv" style="image-rendering: pixelated; margin-right: 5px"></canvas>           
                         <canvas class="d-inline-block" id="p2QueueCv" sttle="image-rendering: pixelated"></canvas>
                     </div>
-                    <p id="roomCodeDisplay">Room number: <span id="roomCodeText"></span></p>
-                    <form id="gameRuleForm" method="get" class="form-example justify-content-between">
-                        <h3>Rules</h2>
-                        <label class="input-block">Initial time (s)</label><input class="input-block" name="initime" type="number" max="60" min="1" placeholder="30" onkeyup="dd.utils.enforceMinMax(this)"/><br>
-                        <label class="input-block">Added time (ms)</label><input class="input-block" name="addtime" type="number" max="1000" min="0" placeholder="500" onkeyup="dd.utils.enforceMinMax(this)"/><br>
+                    <p id="roomCodeText"></p>
+                    <h3 id="placeholderJoin">Waiting for player 2</h3>
+                    <form id="gameRuleForm" method="get" style="display:flex" class="form-example flex-column">
+                        <div style="width:500px">
+                            <div class="input-group mb-3">
+                                <label class="game-rule-label">Initial time (s)</label>
+                                <input class="form-control" name="initime1" type="number" max="60" min="1" placeholder="30" onkeyup="dd.utils.enforceMinMaxLock(this, 'initLock', 'initime2')"/><br>
+                                <div class="input-group-append">
+                                    <button id="initLock" type="button" class="btn btn-primary active" data-toggle="button" aria-pressed="false" autocomplete="off" onclick="dd.utils.toggleButton(this.id, 'initime2')">🔗</button>
+                                </div>
+                                <input class="form-control" readonly="true" name="initime2" type="number" max="60" min="1" placeholder="30" onkeyup="dd.utils.enforceMinMax(this)"/><br>
+                            </div>
+                        </div>
+                        <div style="width:500px">
+                            <div class="input-group mb-3">
+                                <label class="game-rule-label">Added time (ms)</label>
+                                <input class="form-control" name="addtime1" type="number" max="1500" min="1" placeholder="500" onkeyup="dd.utils.enforceMinMaxLock(this, 'addLock', 'addtime2')"/><br>
+                                <div class="input-group-append">
+                                    <button id="addLock" type="button" class="btn btn-primary active" data-toggle="button" aria-pressed="false" autocomplete="off" onclick="dd.utils.toggleButton(this.id, 'addtime2')">🔗</button>
+                                </div>
+                                <input class="form-control" readonly="true" name="addtime2" type="number" max="1500" min="1" placeholder="500" onkeyup="dd.utils.enforceMinMax(this)"/><br>
+                            </div>
+                        </div>
+                        <div style="width:500px">
+                            <div class="input-group mb-3">
+                                <label class="game-rule-label">Solid Garbage (lines)</label>
+                                <input class="form-control" name="solgar1" type="number" max="15" min="0" placeholder="0" onkeyup="dd.utils.enforceMinMaxLock(this, 'solLock', 'solgar2')"/><br>
+                                <div class="input-group-append">
+                                    <button id="solLock" type="button" class="btn btn-primary active" data-toggle="button" aria-pressed="false" autocomplete="off" onclick="dd.utils.toggleButton(this.id, 'solgar2')">🔗</button>
+                                </div>
+                                <input class="form-control" readonly="true" name="solgar2" type="number" max="15" min="0" placeholder="0" onkeyup="dd.utils.enforceMinMax(this)"/><br>
+                            </div>
+                        </div>
                     </form>
                     <button class="btn btn-secondary" id="startButton">Start</button>
                 </div>

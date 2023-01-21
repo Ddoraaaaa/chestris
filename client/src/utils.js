@@ -39,3 +39,30 @@ export function enforceMinMax(elem) {
         }
     }
 }
+
+export function enforceMinMaxLock(elem, watchInput, secondInput) {
+    if (elem.value != "") {
+        if (parseInt(elem.value) < parseInt(elem.min)) {
+            elem.value = elem.min;
+        }
+        if (parseInt(elem.value) > parseInt(elem.max)) {
+            elem.value = elem.max;
+        }
+    }
+    if($("#" + watchInput).hasClass("active")) {
+        $("[name=" + secondInput + "]").val(elem.value);
+    }
+}
+
+export const toggleButton = (elemId, lockedElemId) => {
+    elemId = "#" + elemId;
+    console.log(elemId);
+    if($(elemId).hasClass("active") == false) {
+        $(elemId).addClass("active")
+        $("[name=" + lockedElemId + "]").prop("readonly", true);
+    }
+    else {
+        $(elemId).removeClass("active");
+        $("[name=" + lockedElemId + "]").prop("readonly", false);
+    }
+}
