@@ -1075,6 +1075,7 @@ var dd = (function (exports) {
         [playerTurn, solGar] = params;
         // console.log("lmao");
         $("#placeholderJoin").hide();
+        $("#roomCodeText").hide();
         gameTimeRule.style.display = "none";
         startBtn.style.display = "none";
         
