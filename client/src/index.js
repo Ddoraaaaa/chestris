@@ -47,6 +47,7 @@ startBtn.addEventListener("click", startGame);
 function newRoom() {
     $("#gameRuleForm").hide();
     $("#startButton").hide();
+    $("#myGithub").hide();
     socket.emit("newRoom");
     init();
 }
@@ -54,6 +55,7 @@ function newRoom() {
 function joinRoom() {
     $("#gameRuleForm").hide();
     $("#startButton").hide();
+    $("#myGithub").hide();
     _roomCode = roomCodeInput.value;
     socket.emit("joinRoom", _roomCode);
     handleRoomCode(_roomCode);
