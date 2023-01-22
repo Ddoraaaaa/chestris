@@ -965,6 +965,7 @@ var dd = (function (exports) {
     function newRoom() {
         $("#gameRuleForm").hide();
         $("#startButton").hide();
+        $("#myGithub").hide();
         socket.emit("newRoom");
         init();
     }
@@ -972,6 +973,7 @@ var dd = (function (exports) {
     function joinRoom() {
         $("#gameRuleForm").hide();
         $("#startButton").hide();
+        $("#myGithub").hide();
         _roomCode = roomCodeInput.value;
         socket.emit("joinRoom", _roomCode);
         handleRoomCode(_roomCode);
